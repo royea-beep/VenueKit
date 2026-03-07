@@ -88,7 +88,7 @@ function handleSubmit(e) {
   );
 
   // Open WhatsApp (replace with your number)
-  window.open(`https://wa.me/972501234567?text=${msg}`, '_blank');
+  window.open(`https://wa.me/9720523227765?text=${msg}`, '_blank');
 
   // Show confirmation
   form.innerHTML = `
