@@ -38,6 +38,10 @@ const t = config.tournament_defaults || {};
 const a = config.auth || {};
 const d = config.deploy || {};
 
+// Flatten auth settings into features for conditional processing
+if (a.google) f.google_auth = true;
+if (a.facebook) f.facebook_auth = true;
+
 console.log(`\n♠ VenueKit Generator`);
 console.log(`────────────────────────────────`);
 console.log(`  Venue:  ${v.name} (${v.name_en})`);
@@ -58,11 +62,14 @@ const placeholders = {
   '{{BG_CARD}}': b.bg_card || '#151820',
   '{{FONT_HEBREW}}': b.font_hebrew || 'Heebo',
   '{{FONT_MONO}}': b.font_mono || 'JetBrains Mono',
+  '{{FONT_MONO_URL}}': (b.font_mono || 'JetBrains Mono').replace(/ /g, '+'),
+  '{{FONT_HEBREW_URL}}': (b.font_hebrew || 'Heebo').replace(/ /g, '+'),
   '{{LOGO_PATH}}': b.logo_path || 'images/logo.png',
   '{{SUPABASE_URL}}': s.url || '',
   '{{SUPABASE_KEY}}': s.anon_key || '',
   '{{BUCKET_WINNERS}}': s.bucket_winners || 'winner-photos',
   '{{BUCKET_GALLERY}}': s.bucket_gallery || 'gallery',
+  '{{SUPABASE_WSS}}': (s.url || '').replace('https://', ''),
   '{{CURRENCY}}': t.currency || '₪',
   '{{CURRENCY_CODE}}': t.currency_code || 'ILS',
   '{{ENTRY_FEE}}': String(t.entry_fee || 350),
