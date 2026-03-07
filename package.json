@@ -1,0 +1,13 @@
+{
+  "name": "venuekit",
+  "version": "1.0.0",
+  "description": "Template maker — turn Heroes-Hadera into sellable venue websites",
+  "main": "generator/generate.js",
+  "bin": { "venuekit": "generator/generate.js" },
+  "scripts": {
+    "generate": "node generator/generate.js",
+    "demo": "node generator/generate.js --config configs/heroes-hadera.json --output dist/heroes-demo"
+  },
+  "author": "Roy Arguan <royearguan@gmail.com>",
+  "license": "MIT"
+}

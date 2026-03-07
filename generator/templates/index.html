@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{VENUE_NAME}} — {{VENUE_TAGLINE}}</title>
+  <meta name="description" content="{{VENUE_TAGLINE}} | {{VENUE_LOCATION}}">
+  <meta property="og:title" content="{{VENUE_NAME}}">
+  <meta property="og:description" content="{{VENUE_TAGLINE}}">
+  <meta property="og:image" content="{{SITE_URL}}/images/logo.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&family={{FONT_MONO}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <img src="{{LOGO_PATH}}" alt="{{VENUE_NAME}}">
+      <span>{{VENUE_NAME}}</span>
+    </a>
+    <ul class="navbar-links">
+      <li><a href="index.html" class="active">ראשי</a></li>
+      <li><a href="tournaments.html">טורנירים</a></li>
+      {{#if league}}<li><a href="league.html">ליגה</a></li>{{/if}}
+      {{#if gallery}}<li><a href="gallery.html">גלריה</a></li>{{/if}}
+      {{#if winners}}<li><a href="winners.html">זוכים</a></li>{{/if}}
+      <li><a href="login.html">התחברות</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>ברוכים הבאים ל<span>{{VENUE_NAME}}</span></h1>
+    <p>{{VENUE_TAGLINE}} · {{VENUE_LOCATION}}</p>
+    <a href="tournaments.html" class="btn btn-primary">לטורנירים הקרובים</a>
+  </section>
+
+  <!-- Next Tournament Countdown -->
+  <section class="section">
+    <h2 class="section-title">הטורניר הבא</h2>
+    <div class="countdown" id="countdown">
+      <div class="countdown-item"><div class="countdown-value" id="cd-days">--</div><div class="countdown-label">ימים</div></div>
+      <div class="countdown-item"><div class="countdown-value" id="cd-hours">--</div><div class="countdown-label">שעות</div></div>
+      <div class="countdown-item"><div class="countdown-value" id="cd-mins">--</div><div class="countdown-label">דקות</div></div>
+      <div class="countdown-item"><div class="countdown-value" id="cd-secs">--</div><div class="countdown-label">שניות</div></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-value">{{CURRENCY}}{{ENTRY_FEE}}</div><div class="stat-label">דמי כניסה</div></div>
+      <div class="stat-card"><div class="stat-value">{{STARTING_STACK}}</div><div class="stat-label">ערימת פתיחה</div></div>
+      <div class="stat-card"><div class="stat-value">{{WEEKLY_TIME}}</div><div class="stat-label">שעת התחלה</div></div>
+    </div>
+  </section>
+
+  <!-- Upcoming Tournaments -->
+  <section class="section">
+    <h2 class="section-title">טורנירים קרובים</h2>
+    <div class="grid grid-2" id="upcoming-tournaments">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+
+  {{#if league}}
+  <!-- League Standings -->
+  <section class="section">
+    <h2 class="section-title">טבלת ליגה</h2>
+    <div class="card">
+      <table class="data-table" id="league-table">
+        <thead>
+          <tr><th>#</th><th>שחקן</th><th>נקודות</th><th>טורנירים</th></tr>
+        </thead>
+        <tbody id="league-body">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {{/if}}
+
+  {{#if winners}}
+  <!-- Recent Winners -->
+  <section class="section">
+    <h2 class="section-title">זוכים אחרונים</h2>
+    <div class="grid grid-3" id="recent-winners">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+  {{/if}}
+
+  <!-- About -->
+  <section class="section text-center">
+    <h2 class="section-title">אודות {{VENUE_NAME}}</h2>
+    <p style="max-width:600px;margin:0 auto;color:var(--text-secondary)">
+      {{VENUE_TAGLINE}} ב{{VENUE_LOCATION}}.
+      אנחנו מציעים חוויית פוקר מקצועית עם ניהול טורנירים מתקדם,
+      מערכת ליגה ודירוג, ואווירה מעולה.
+    </p>
+    <div class="stats-row mt-3">
+      <div class="stat-card"><div class="stat-value" id="total-players">--</div><div class="stat-label">שחקנים רשומים</div></div>
+      <div class="stat-card"><div class="stat-value" id="total-tournaments">--</div><div class="stat-label">טורנירים</div></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>{{VENUE_NAME}} · {{VENUE_LOCATION}} · {{CONTACT_PHONE}}</p>
+    <p style="margin-top:8px">© {{YEAR}} כל הזכויות שמורות</p>
+  </footer>
+
+  <!-- Bottom Nav (Mobile) -->
+  <nav class="bottom-nav">
+    <ul class="bottom-nav-items">
+      <li><a href="index.html" class="active">🏠<span>ראשי</span></a></li>
+      <li><a href="tournaments.html">🎯<span>טורנירים</span></a></li>
+      {{#if league}}<li><a href="league.html">🏆<span>ליגה</span></a></li>{{/if}}
+      {{#if gallery}}<li><a href="gallery.html">📸<span>גלריה</span></a></li>{{/if}}
+      <li><a href="profile.html">👤<span>פרופיל</span></a></li>
+    </ul>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  {{#if error_tracking}}<script src="js/errorHandler.js"></script>{{/if}}
+  {{#if cookie_consent}}<script src="js/cookie-consent.js"></script>{{/if}}
+
+  <script>
+    // Load upcoming tournaments
+    (async function() {
+      const { data: tournaments } = await db.from('tournaments')
+        .select('*')
+        .gte('date', new Date().toISOString().split('T')[0])
+        .order('date', { ascending: true })
+        .limit(4);
+
+      const container = document.getElementById('upcoming-tournaments');
+      if (!tournaments || tournaments.length === 0) {
+        container.innerHTML = '<p class="text-center text-muted">אין טורנירים קרובים</p>';
+        return;
+      }
+
+      container.innerHTML = tournaments.map(t => `
+        <a href="tournament.html?id=${t.id}" class="card tournament-card">
+          <div class="date">${new Date(t.date).toLocaleDateString('he-IL')}</div>
+          <div class="card-title">${t.title || 'טורניר'}</div>
+          <div class="fee">{{CURRENCY}}${t.entry_fee || {{ENTRY_FEE}}}</div>
+          <div class="details">
+            <span>🕐 ${t.time || '{{WEEKLY_TIME}}'}</span>
+            <span>👥 ${t.registered_count || 0}/${t.max_players || {{MAX_PLAYERS}}}</span>
+          </div>
+        </a>
+      `).join('');
+
+      // Countdown to first tournament
+      if (tournaments[0]) {
+        const target = new Date(tournaments[0].date + 'T' + (tournaments[0].time || '{{WEEKLY_TIME}}'));
+        setInterval(() => {
+          const diff = target - Date.now();
+          if (diff <= 0) return;
+          document.getElementById('cd-days').textContent = Math.floor(diff / 86400000);
+          document.getElementById('cd-hours').textContent = Math.floor((diff % 86400000) / 3600000);
+          document.getElementById('cd-mins').textContent = Math.floor((diff % 3600000) / 60000);
+          document.getElementById('cd-secs').textContent = Math.floor((diff % 60000) / 1000);
+        }, 1000);
+      }
+
+      // Stats
+      const { count: playerCount } = await db.from('players').select('*', { count: 'exact', head: true });
+      const { count: tournamentCount } = await db.from('tournaments').select('*', { count: 'exact', head: true });
+      document.getElementById('total-players').textContent = playerCount || 0;
+      document.getElementById('total-tournaments').textContent = tournamentCount || 0;
+    })();
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>

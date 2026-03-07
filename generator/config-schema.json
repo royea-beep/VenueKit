@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VenueKit Configuration",
+  "type": "object",
+  "required": ["venue", "branding", "supabase", "features"],
+  "properties": {
+    "venue": {
+      "type": "object",
+      "required": ["name", "name_en", "tagline", "location"],
+      "properties": {
+        "name": { "type": "string", "description": "Venue name (Hebrew)" },
+        "name_en": { "type": "string", "description": "Venue name (English)" },
+        "tagline": { "type": "string", "description": "Short tagline" },
+        "location": { "type": "string" },
+        "contact_phone": { "type": "string" },
+        "contact_email": { "type": "string" },
+        "address": { "type": "string" }
+      }
+    },
+    "branding": {
+      "type": "object",
+      "properties": {
+        "primary_color": { "type": "string", "default": "#E8223A" },
+        "secondary_color": { "type": "string", "default": "#E8B829" },
+        "bg_dark": { "type": "string", "default": "#0D0F14" },
+        "bg_card": { "type": "string", "default": "#151820" },
+        "font_hebrew": { "type": "string", "default": "Heebo" },
+        "font_mono": { "type": "string", "default": "JetBrains Mono" },
+        "logo_path": { "type": "string", "default": "images/logo.png" }
+      }
+    },
+    "supabase": {
+      "type": "object",
+      "required": ["url", "anon_key"],
+      "properties": {
+        "url": { "type": "string" },
+        "anon_key": { "type": "string" },
+        "bucket_winners": { "type": "string", "default": "winner-photos" },
+        "bucket_gallery": { "type": "string", "default": "gallery" }
+      }
+    },
+    "features": {
+      "type": "object",
+      "properties": {
+        "tournaments": { "type": "boolean", "default": true },
+        "league": { "type": "boolean", "default": true },
+        "gallery": { "type": "boolean", "default": false },
+        "winners": { "type": "boolean", "default": false },
+        "timer": { "type": "boolean", "default": false },
+        "profile": { "type": "boolean", "default": true },
+        "notifications": { "type": "boolean", "default": false },
+        "cookie_consent": { "type": "boolean", "default": true },
+        "error_tracking": { "type": "boolean", "default": true },
+        "pwa": { "type": "boolean", "default": false },
+        "admin_panel": { "type": "boolean", "default": true },
+        "whatsapp_broadcast": { "type": "boolean", "default": false },
+        "early_bird": { "type": "boolean", "default": false },
+        "reentry": { "type": "boolean", "default": true },
+        "csv_export": { "type": "boolean", "default": false }
+      }
+    },
+    "tournament_defaults": {
+      "type": "object",
+      "properties": {
+        "entry_fee": { "type": "number", "default": 350 },
+        "currency": { "type": "string", "default": "₪" },
+        "currency_code": { "type": "string", "default": "ILS" },
+        "starting_stack": { "type": "number", "default": 75000 },
+        "max_players": { "type": "number", "default": 60 },
+        "max_reentries": { "type": "number", "default": 3 },
+        "weekly_day": { "type": "string", "default": "Tuesday" },
+        "weekly_time": { "type": "string", "default": "19:00" }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "properties": {
+        "google": { "type": "boolean", "default": true },
+        "facebook": { "type": "boolean", "default": true }
+      }
+    },
+    "deploy": {
+      "type": "object",
+      "properties": {
+        "site_url": { "type": "string" },
+        "ftp_host": { "type": "string" },
+        "ftp_user": { "type": "string" },
+        "ftp_root": { "type": "string" }
+      }
+    }
+  }
+}

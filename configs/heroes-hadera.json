@@ -1,0 +1,63 @@
+{
+  "venue": {
+    "name": "ההירוס בחדרה",
+    "name_en": "Heroes Hadera",
+    "tagline": "טורנירי פוקר לייב",
+    "location": "חדרה",
+    "contact_phone": "050-1234567",
+    "contact_email": "info@heroes-hadera.co.il",
+    "address": "חדרה"
+  },
+  "branding": {
+    "primary_color": "#E8223A",
+    "secondary_color": "#E8B829",
+    "bg_dark": "#0D0F14",
+    "bg_card": "#151820",
+    "font_hebrew": "Heebo",
+    "font_mono": "JetBrains Mono",
+    "logo_path": "images/logo.png"
+  },
+  "supabase": {
+    "url": "https://xyxlncucsgegrpornvol.supabase.co",
+    "anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5eGxuY3Vjc2dlZ3Jwb3Judm9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NDIzMjgsImV4cCI6MjA4ODAxODMyOH0.BZFrW4pBnMFjwmqAFmdvDeGjx72M3HfF-lek4YkFpTk",
+    "bucket_winners": "winner-photos",
+    "bucket_gallery": "gallery"
+  },
+  "features": {
+    "tournaments": true,
+    "league": true,
+    "gallery": true,
+    "winners": true,
+    "timer": true,
+    "profile": true,
+    "notifications": true,
+    "cookie_consent": true,
+    "error_tracking": true,
+    "pwa": true,
+    "admin_panel": true,
+    "whatsapp_broadcast": true,
+    "early_bird": true,
+    "reentry": true,
+    "csv_export": true
+  },
+  "tournament_defaults": {
+    "entry_fee": 350,
+    "currency": "₪",
+    "currency_code": "ILS",
+    "starting_stack": 75000,
+    "max_players": 60,
+    "max_reentries": 3,
+    "weekly_day": "Tuesday",
+    "weekly_time": "19:00"
+  },
+  "auth": {
+    "google": true,
+    "facebook": true
+  },
+  "deploy": {
+    "site_url": "https://heroes.ftable.co.il",
+    "ftp_host": "ftable.co.il",
+    "ftp_user": "ftableco",
+    "ftp_root": "/public_html/heroes-hadera"
+  }
+}
