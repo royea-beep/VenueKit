@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>התחברות — {{VENUE_NAME}}</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&family={{FONT_MONO}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <img src="{{LOGO_PATH}}" alt="{{VENUE_NAME}}">
+      <span>{{VENUE_NAME}}</span>
+    </a>
+    <ul class="navbar-links">
+      <li><a href="index.html">ראשי</a></li>
+      <li><a href="tournaments.html">טורנירים</a></li>
+      {{#if league}}<li><a href="league.html">ליגה</a></li>{{/if}}
+      <li><a href="login.html" class="active">התחברות</a></li>
+    </ul>
+  </nav>
+
+  <section class="section" style="max-width:420px;margin:40px auto">
+    <div class="card">
+      <div class="text-center" style="margin-bottom:24px">
+        <img src="{{LOGO_PATH}}" alt="{{VENUE_NAME}}" style="width:80px;height:80px;border-radius:50%;margin-bottom:12px">
+        <h2>התחברות</h2>
+        <p class="text-muted">היכנס לחשבון שלך ב{{VENUE_NAME}}</p>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="tab-bar" id="auth-tabs">
+        <button class="tab active" data-tab="login">התחברות</button>
+        <button class="tab" data-tab="register">הרשמה</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" style="margin-top:20px">
+        <div class="form-group">
+          <label>אימייל</label>
+          <input type="email" id="login-email" class="form-input" placeholder="your@email.com" required dir="ltr">
+        </div>
+        <div class="form-group">
+          <label>סיסמה</label>
+          <input type="password" id="login-pass" class="form-input" placeholder="********" required dir="ltr">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">התחבר</button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" style="margin-top:20px;display:none">
+        <div class="form-group">
+          <label>שם תצוגה</label>
+          <input type="text" id="reg-name" class="form-input" placeholder="השם שלך" required>
+        </div>
+        <div class="form-group">
+          <label>אימייל</label>
+          <input type="email" id="reg-email" class="form-input" placeholder="your@email.com" required dir="ltr">
+        </div>
+        <div class="form-group">
+          <label>טלפון</label>
+          <input type="tel" id="reg-phone" class="form-input" placeholder="05X-XXXXXXX" dir="ltr">
+        </div>
+        <div class="form-group">
+          <label>סיסמה</label>
+          <input type="password" id="reg-pass" class="form-input" placeholder="לפחות 6 תווים" required minlength="6" dir="ltr">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%">הירשם</button>
+      </form>
+
+      <div id="auth-msg" style="margin-top:16px;text-align:center"></div>
+
+      {{#if google_auth}}
+      <div style="margin-top:20px;text-align:center">
+        <div class="divider"><span>או</span></div>
+        <button id="btn-google" class="btn btn-secondary" style="width:100%;margin-top:12px">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" style="width:18px;vertical-align:middle;margin-left:8px">
+          התחבר עם Google
+        </button>
+      </div>
+      {{/if}}
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>{{VENUE_NAME}} · {{VENUE_LOCATION}} · {{CONTACT_PHONE}}</p>
+    <p style="margin-top:8px">&copy; {{YEAR}} כל הזכויות שמורות</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('#auth-tabs .tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('#auth-tabs .tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const isLogin = tab.dataset.tab === 'login';
+        document.getElementById('login-form').style.display = isLogin ? 'block' : 'none';
+        document.getElementById('register-form').style.display = isLogin ? 'none' : 'block';
+        document.getElementById('auth-msg').textContent = '';
+      };
+    });
+
+    const msgEl = document.getElementById('auth-msg');
+
+    // Login
+    document.getElementById('login-form').onsubmit = async (e) => {
+      e.preventDefault();
+      msgEl.innerHTML = '<span class="text-muted">מתחבר...</span>';
+      const { error } = await db.auth.signInWithPassword({
+        email: document.getElementById('login-email').value,
+        password: document.getElementById('login-pass').value
+      });
+      if (error) {
+        msgEl.innerHTML = `<span style="color:#ef4444">${error.message}</span>`;
+      } else {
+        location.href = 'profile.html';
+      }
+    };
+
+    // Register
+    document.getElementById('register-form').onsubmit = async (e) => {
+      e.preventDefault();
+      msgEl.innerHTML = '<span class="text-muted">נרשם...</span>';
+      const { data, error } = await db.auth.signUp({
+        email: document.getElementById('reg-email').value,
+        password: document.getElementById('reg-pass').value,
+        options: {
+          data: {
+            display_name: document.getElementById('reg-name').value,
+            phone: document.getElementById('reg-phone').value
+          }
+        }
+      });
+      if (error) {
+        msgEl.innerHTML = `<span style="color:#ef4444">${error.message}</span>`;
+      } else {
+        msgEl.innerHTML = '<span style="color:#22c55e">נרשמת בהצלחה! בדוק את האימייל לאימות.</span>';
+      }
+    };
+
+    {{#if google_auth}}
+    // Google OAuth
+    document.getElementById('btn-google').onclick = async () => {
+      await db.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: '{{SITE_URL}}/profile.html' }
+      });
+    };
+    {{/if}}
+
+    // If already logged in, redirect
+    db.auth.getUser().then(({ data: { user } }) => {
+      if (user) location.href = 'profile.html';
+    });
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ניהול — {{VENUE_NAME}}</title>
+  <link rel="icon" href="../images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&family={{FONT_MONO}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <nav class="admin-sidebar">
+      <div style="padding:12px 20px;margin-bottom:12px;border-bottom:1px solid var(--border)">
+        <strong style="font-size:14px">{{VENUE_NAME}}</strong>
+        <div class="text-muted" style="font-size:12px">ניהול</div>
+      </div>
+      <a href="index.html" class="active">📊 דשבורד</a>
+      <a href="tournaments.html">🎯 טורנירים</a>
+      <a href="players.html">👥 שחקנים</a>
+      {{#if league}}<a href="leagues.html">🏆 ליגה</a>{{/if}}
+      {{#if gallery}}<a href="gallery.html">📸 גלריה</a>{{/if}}
+      <a href="../index.html">← חזרה לאתר</a>
+    </nav>
+
+    <main class="admin-content">
+      <h1 style="margin-bottom:24px">דשבורד</h1>
+
+      <div class="stats-row" style="justify-content:flex-start">
+        <div class="stat-card"><div class="stat-value" id="s-players">-</div><div class="stat-label">שחקנים</div></div>
+        <div class="stat-card"><div class="stat-value" id="s-tournaments">-</div><div class="stat-label">טורנירים</div></div>
+        <div class="stat-card"><div class="stat-value" id="s-upcoming">-</div><div class="stat-label">קרובים</div></div>
+        <div class="stat-card"><div class="stat-value" id="s-regs">-</div><div class="stat-label">רישומים</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px">
+        <div class="card">
+          <h3 style="margin-bottom:12px">טורנירים קרובים</h3>
+          <div id="upcoming-list"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:12px">רישומים אחרונים</h3>
+          <div id="recent-regs"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+
+  <script>
+    (async function() {
+      // Auth check
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) { location.href = '../login.html'; return; }
+
+      const today = new Date().toISOString().split('T')[0];
+
+      // Stats
+      const [players, tournaments, upcoming, regs] = await Promise.all([
+        db.from('players').select('*', { count: 'exact', head: true }),
+        db.from('tournaments').select('*', { count: 'exact', head: true }),
+        db.from('tournaments').select('*', { count: 'exact', head: true }).gte('date', today),
+        db.from('registrations').select('*', { count: 'exact', head: true })
+      ]);
+
+      document.getElementById('s-players').textContent = players.count || 0;
+      document.getElementById('s-tournaments').textContent = tournaments.count || 0;
+      document.getElementById('s-upcoming').textContent = upcoming.count || 0;
+      document.getElementById('s-regs').textContent = regs.count || 0;
+
+      // Upcoming list
+      const { data: upList } = await db.from('tournaments').select('*')
+        .gte('date', today).order('date').limit(5);
+      document.getElementById('upcoming-list').innerHTML = upList && upList.length
+        ? upList.map(t => `
+          <div class="flex-between" style="padding:8px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <strong>${t.title || 'טורניר'}</strong>
+              <div class="text-muted" style="font-size:12px">${new Date(t.date).toLocaleDateString('he-IL')} · ${t.time || '{{WEEKLY_TIME}}'}</div>
+            </div>
+            <span class="badge badge-primary">${t.registered_count || 0}/${t.max_players || {{MAX_PLAYERS}}}</span>
+          </div>`).join('')
+        : '<p class="text-muted">אין טורנירים קרובים</p>';
+
+      // Recent registrations
+      const { data: regList } = await db.from('registrations')
+        .select('player_name, created_at, tournaments(title)')
+        .order('created_at', { ascending: false }).limit(10);
+      document.getElementById('recent-regs').innerHTML = regList && regList.length
+        ? regList.map(r => `
+          <div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+            <strong>${r.player_name || 'שחקן'}</strong>
+            <span class="text-muted"> → ${r.tournaments?.title || 'טורניר'}</span>
+            <span class="text-muted" style="float:left;font-size:11px">${new Date(r.created_at).toLocaleString('he-IL')}</span>
+          </div>`).join('')
+        : '<p class="text-muted">אין רישומים עדיין</p>';
+    })();
+  </script>
+</body>
+</html>

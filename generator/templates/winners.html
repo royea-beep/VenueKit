@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>זוכים — {{VENUE_NAME}}</title>
+  <meta name="description" content="זוכי הטורנירים של {{VENUE_NAME}}">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&family={{FONT_MONO}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <img src="{{LOGO_PATH}}" alt="{{VENUE_NAME}}">
+      <span>{{VENUE_NAME}}</span>
+    </a>
+    <ul class="navbar-links">
+      <li><a href="index.html">ראשי</a></li>
+      <li><a href="tournaments.html">טורנירים</a></li>
+      {{#if league}}<li><a href="league.html">ליגה</a></li>{{/if}}
+      {{#if gallery}}<li><a href="gallery.html">גלריה</a></li>{{/if}}
+      <li><a href="winners.html" class="active">זוכים</a></li>
+      <li><a href="login.html">התחברות</a></li>
+    </ul>
+  </nav>
+
+  <section class="section">
+    <h1 class="section-title">זוכי הטורנירים</h1>
+    <div class="grid grid-3" id="winners-grid"></div>
+  </section>
+
+  <footer class="footer">
+    <p>{{VENUE_NAME}} · {{VENUE_LOCATION}} · {{CONTACT_PHONE}}</p>
+    <p style="margin-top:8px">&copy; {{YEAR}} כל הזכויות שמורות</p>
+  </footer>
+
+  <nav class="bottom-nav">
+    <ul class="bottom-nav-items">
+      <li><a href="index.html">🏠<span>ראשי</span></a></li>
+      <li><a href="tournaments.html">🎯<span>טורנירים</span></a></li>
+      {{#if league}}<li><a href="league.html">🏆<span>ליגה</span></a></li>{{/if}}
+      {{#if gallery}}<li><a href="gallery.html">📸<span>גלריה</span></a></li>{{/if}}
+      <li><a href="profile.html">👤<span>פרופיל</span></a></li>
+    </ul>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+
+  <script>
+    (async function() {
+      const { data: winners } = await db.from('winners')
+        .select('*, tournaments(title, date)')
+        .eq('finish_position', 1)
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      const grid = document.getElementById('winners-grid');
+      if (!winners || winners.length === 0) {
+        grid.innerHTML = '<p class="text-center text-muted" style="grid-column:1/-1">עוד אין זוכים</p>';
+        return;
+      }
+
+      grid.innerHTML = winners.map(w => {
+        const photoStyle = w.photo_url
+          ? `background-image:url('${w.photo_url}');background-size:cover;background-position:center`
+          : 'background:var(--bg-card-hover);display:flex;align-items:center;justify-content:center;font-size:48px';
+        const date = w.tournaments?.date ? new Date(w.tournaments.date).toLocaleDateString('he-IL') : '';
+        return `
+          <div class="card" style="overflow:hidden">
+            <div style="height:200px;${photoStyle}">${w.photo_url ? '' : '🏆'}</div>
+            <div style="padding:16px">
+              <div class="card-title">${w.player_name || 'זוכה'}</div>
+              <div class="text-muted">${w.tournaments?.title || 'טורניר'}</div>
+              <div class="text-muted">${date}</div>
+              ${w.prize_amount ? `<div style="color:var(--primary);font-weight:700;margin-top:8px">{{CURRENCY}}${w.prize_amount}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    })();
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>

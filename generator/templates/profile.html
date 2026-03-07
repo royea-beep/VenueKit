@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>פרופיל — {{VENUE_NAME}}</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&family={{FONT_MONO}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <img src="{{LOGO_PATH}}" alt="{{VENUE_NAME}}">
+      <span>{{VENUE_NAME}}</span>
+    </a>
+    <ul class="navbar-links">
+      <li><a href="index.html">ראשי</a></li>
+      <li><a href="tournaments.html">טורנירים</a></li>
+      {{#if league}}<li><a href="league.html">ליגה</a></li>{{/if}}
+      <li><a href="profile.html" class="active">פרופיל</a></li>
+    </ul>
+  </nav>
+
+  <section class="section" style="max-width:600px;margin:20px auto">
+    <div class="card" id="profile-card">
+      <div class="text-center" style="margin-bottom:20px">
+        <div id="avatar" style="width:80px;height:80px;border-radius:50%;background:var(--bg-card-hover);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px">👤</div>
+        <h2 id="p-name">טוען...</h2>
+        <p class="text-muted" id="p-email"></p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-value" id="p-played">-</div><div class="stat-label">טורנירים</div></div>
+        <div class="stat-card"><div class="stat-value" id="p-best">-</div><div class="stat-label">מקום הכי טוב</div></div>
+        <div class="stat-card"><div class="stat-value" id="p-prizes">-</div><div class="stat-label">סה"כ פרסים</div></div>
+      </div>
+
+      <h3 style="margin:24px 0 12px">טורנירים אחרונים</h3>
+      <div id="my-tournaments"></div>
+
+      <div style="margin-top:24px;text-align:center">
+        <button class="btn btn-secondary" id="btn-logout">התנתק</button>
+      </div>
+    </div>
+
+    <div id="login-prompt" class="card text-center" style="display:none">
+      <h2>לא מחובר</h2>
+      <p class="text-muted" style="margin:12px 0">התחבר כדי לראות את הפרופיל שלך</p>
+      <a href="login.html" class="btn btn-primary">התחברות</a>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>{{VENUE_NAME}} · {{VENUE_LOCATION}} · {{CONTACT_PHONE}}</p>
+    <p style="margin-top:8px">&copy; {{YEAR}} כל הזכויות שמורות</p>
+  </footer>
+
+  <nav class="bottom-nav">
+    <ul class="bottom-nav-items">
+      <li><a href="index.html">🏠<span>ראשי</span></a></li>
+      <li><a href="tournaments.html">🎯<span>טורנירים</span></a></li>
+      {{#if league}}<li><a href="league.html">🏆<span>ליגה</span></a></li>{{/if}}
+      {{#if gallery}}<li><a href="gallery.html">📸<span>גלריה</span></a></li>{{/if}}
+      <li><a href="profile.html" class="active">👤<span>פרופיל</span></a></li>
+    </ul>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+
+  <script>
+    (async function() {
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) {
+        document.getElementById('profile-card').style.display = 'none';
+        document.getElementById('login-prompt').style.display = 'block';
+        return;
+      }
+
+      const meta = user.user_metadata || {};
+      document.getElementById('p-name').textContent = meta.display_name || meta.full_name || 'שחקן';
+      document.getElementById('p-email').textContent = user.email;
+
+      // Player stats
+      const { data: regs } = await db.from('registrations')
+        .select('*, tournaments(title, date)')
+        .eq('player_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (regs && regs.length) {
+        document.getElementById('p-played').textContent = regs.length;
+        const finishes = regs.filter(r => r.finish_position).map(r => r.finish_position);
+        document.getElementById('p-best').textContent = finishes.length ? Math.min(...finishes) : '-';
+        document.getElementById('p-prizes').textContent = '{{CURRENCY}}' + regs.reduce((s, r) => s + (r.prize_amount || 0), 0);
+
+        document.getElementById('my-tournaments').innerHTML = regs.slice(0, 10).map(r => `
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span>${r.tournaments?.title || 'טורניר'}</span>
+            <span class="text-muted">${r.tournaments?.date ? new Date(r.tournaments.date).toLocaleDateString('he-IL') : ''}</span>
+          </div>
+        `).join('');
+      } else {
+        document.getElementById('my-tournaments').innerHTML = '<p class="text-muted">עוד לא השתתפת בטורנירים</p>';
+      }
+
+      // Logout
+      document.getElementById('btn-logout').onclick = async () => {
+        await db.auth.signOut();
+        location.href = 'index.html';
+      };
+    })();
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>

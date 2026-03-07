@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>טורניר — {{VENUE_NAME}}</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&family={{FONT_MONO}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <img src="{{LOGO_PATH}}" alt="{{VENUE_NAME}}">
+      <span>{{VENUE_NAME}}</span>
+    </a>
+    <ul class="navbar-links">
+      <li><a href="index.html">ראשי</a></li>
+      <li><a href="tournaments.html" class="active">טורנירים</a></li>
+      {{#if league}}<li><a href="league.html">ליגה</a></li>{{/if}}
+      {{#if gallery}}<li><a href="gallery.html">גלריה</a></li>{{/if}}
+      {{#if winners}}<li><a href="winners.html">זוכים</a></li>{{/if}}
+      <li><a href="login.html">התחברות</a></li>
+    </ul>
+  </nav>
+
+  <section class="section" id="tournament-detail">
+    <div class="card" style="max-width:700px;margin:0 auto">
+      <h1 class="card-title" id="t-title">טוען...</h1>
+      <div class="stats-row" id="t-stats"></div>
+      <div id="t-description" style="margin:16px 0;color:var(--text-secondary)"></div>
+
+      <div id="t-register-section" style="margin:24px 0;text-align:center">
+        <button class="btn btn-primary" id="btn-register" style="display:none">הירשם לטורניר</button>
+        <div id="register-msg"></div>
+      </div>
+
+      <h3 style="margin:24px 0 12px">רשימת שחקנים רשומים</h3>
+      <div id="t-players" class="text-muted">טוען...</div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>{{VENUE_NAME}} · {{VENUE_LOCATION}} · {{CONTACT_PHONE}}</p>
+    <p style="margin-top:8px">&copy; {{YEAR}} כל הזכויות שמורות</p>
+  </footer>
+
+  <nav class="bottom-nav">
+    <ul class="bottom-nav-items">
+      <li><a href="index.html">🏠<span>ראשי</span></a></li>
+      <li><a href="tournaments.html" class="active">🎯<span>טורנירים</span></a></li>
+      {{#if league}}<li><a href="league.html">🏆<span>ליגה</span></a></li>{{/if}}
+      {{#if gallery}}<li><a href="gallery.html">📸<span>גלריה</span></a></li>{{/if}}
+      <li><a href="profile.html">👤<span>פרופיל</span></a></li>
+    </ul>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+
+  <script>
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) { location.href = 'tournaments.html'; }
+
+    (async function() {
+      const { data: t } = await db.from('tournaments').select('*').eq('id', id).single();
+      if (!t) { document.getElementById('t-title').textContent = 'טורניר לא נמצא'; return; }
+
+      document.title = `${t.title || 'טורניר'} — {{VENUE_NAME}}`;
+      document.getElementById('t-title').textContent = t.title || 'טורניר';
+      document.getElementById('t-description').textContent = t.description || '';
+
+      document.getElementById('t-stats').innerHTML = `
+        <div class="stat-card"><div class="stat-value">${new Date(t.date).toLocaleDateString('he-IL')}</div><div class="stat-label">תאריך</div></div>
+        <div class="stat-card"><div class="stat-value">${t.time || '{{WEEKLY_TIME}}'}</div><div class="stat-label">שעה</div></div>
+        <div class="stat-card"><div class="stat-value">{{CURRENCY}}${t.entry_fee || {{ENTRY_FEE}}}</div><div class="stat-label">כניסה</div></div>
+        <div class="stat-card"><div class="stat-value">${t.registered_count || 0}/${t.max_players || {{MAX_PLAYERS}}}</div><div class="stat-label">שחקנים</div></div>
+      `;
+
+      // Registration
+      const isPast = t.date < new Date().toISOString().split('T')[0];
+      const isFull = (t.registered_count || 0) >= (t.max_players || {{MAX_PLAYERS}});
+      const btnReg = document.getElementById('btn-register');
+
+      if (!isPast && !isFull) {
+        const { data: { user } } = await db.auth.getUser();
+        if (user) {
+          btnReg.style.display = 'inline-block';
+          btnReg.onclick = async () => {
+            btnReg.disabled = true;
+            btnReg.textContent = 'נרשם...';
+            const { error } = await db.from('registrations').insert({
+              tournament_id: t.id, player_id: user.id, player_name: user.user_metadata?.display_name || user.email
+            });
+            document.getElementById('register-msg').innerHTML = error
+              ? `<span style="color:#ef4444">${error.message.includes('duplicate') ? 'כבר רשום לטורניר' : error.message}</span>`
+              : '<span style="color:#22c55e">נרשמת בהצלחה!</span>';
+          };
+        } else {
+          document.getElementById('register-msg').innerHTML = '<a href="login.html" class="btn btn-secondary">התחבר כדי להירשם</a>';
+        }
+      } else if (isFull) {
+        document.getElementById('register-msg').innerHTML = '<span class="badge badge-danger">הטורניר מלא</span>';
+      }
+
+      // Registered players
+      const { data: regs } = await db.from('registrations').select('player_name, created_at')
+        .eq('tournament_id', t.id).order('created_at', { ascending: true });
+      document.getElementById('t-players').innerHTML = regs && regs.length
+        ? `<ol style="padding-right:20px">${regs.map(r => `<li style="padding:4px 0">${r.player_name || 'שחקן'}</li>`).join('')}</ol>`
+        : '<p class="text-muted">אין שחקנים רשומים עדיין</p>';
+    })();
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>

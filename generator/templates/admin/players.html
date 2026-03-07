@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שחקנים — {{VENUE_NAME}}</title>
+  <link rel="icon" href="../images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <nav class="admin-sidebar">
+      <div style="padding:12px 20px;margin-bottom:12px;border-bottom:1px solid var(--border)">
+        <strong style="font-size:14px">{{VENUE_NAME}}</strong>
+        <div class="text-muted" style="font-size:12px">ניהול</div>
+      </div>
+      <a href="index.html">📊 דשבורד</a>
+      <a href="tournaments.html">🎯 טורנירים</a>
+      <a href="players.html" class="active">👥 שחקנים</a>
+      {{#if league}}<a href="leagues.html">🏆 ליגה</a>{{/if}}
+      {{#if gallery}}<a href="gallery.html">📸 גלריה</a>{{/if}}
+      <a href="../index.html">← חזרה לאתר</a>
+    </nav>
+
+    <main class="admin-content">
+      <h1 style="margin-bottom:24px">שחקנים</h1>
+
+      <div class="form-group" style="max-width:300px;margin-bottom:16px">
+        <input class="form-input" type="search" id="search" placeholder="חיפוש שחקן...">
+      </div>
+
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr><th>שם</th><th>אימייל</th><th>טלפון</th><th>הצטרף</th><th>אדמין</th></tr>
+          </thead>
+          <tbody id="p-body"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+
+  <script>
+    let allPlayers = [];
+
+    async function loadPlayers() {
+      const { data } = await db.from('players').select('*').order('created_at', { ascending: false });
+      allPlayers = data || [];
+      renderPlayers(allPlayers);
+    }
+
+    function renderPlayers(players) {
+      document.getElementById('p-body').innerHTML = players.map(p => `
+        <tr>
+          <td><strong>${p.display_name || '-'}</strong></td>
+          <td class="text-muted">${p.email || '-'}</td>
+          <td>${p.phone || '-'}</td>
+          <td class="text-muted">${p.created_at ? new Date(p.created_at).toLocaleDateString('he-IL') : '-'}</td>
+          <td>${p.is_admin ? '<span class="badge badge-gold">אדמין</span>' : ''}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="5" class="text-center text-muted">אין שחקנים</td></tr>';
+    }
+
+    document.getElementById('search').oninput = (e) => {
+      const q = e.target.value.toLowerCase();
+      renderPlayers(allPlayers.filter(p =>
+        (p.display_name || '').toLowerCase().includes(q) ||
+        (p.email || '').toLowerCase().includes(q) ||
+        (p.phone || '').includes(q)
+      ));
+    };
+
+    db.auth.getUser().then(({ data: { user } }) => {
+      if (!user) location.href = '../login.html';
+      else loadPlayers();
+    });
+  </script>
+</body>
+</html>

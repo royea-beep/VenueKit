@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ניהול טורנירים — {{VENUE_NAME}}</title>
+  <link rel="icon" href="../images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <nav class="admin-sidebar">
+      <div style="padding:12px 20px;margin-bottom:12px;border-bottom:1px solid var(--border)">
+        <strong style="font-size:14px">{{VENUE_NAME}}</strong>
+        <div class="text-muted" style="font-size:12px">ניהול</div>
+      </div>
+      <a href="index.html">📊 דשבורד</a>
+      <a href="tournaments.html" class="active">🎯 טורנירים</a>
+      <a href="players.html">👥 שחקנים</a>
+      {{#if league}}<a href="leagues.html">🏆 ליגה</a>{{/if}}
+      {{#if gallery}}<a href="gallery.html">📸 גלריה</a>{{/if}}
+      <a href="../index.html">← חזרה לאתר</a>
+    </nav>
+
+    <main class="admin-content">
+      <div class="flex-between" style="margin-bottom:24px">
+        <h1>טורנירים</h1>
+        <button class="btn btn-primary" onclick="showCreateModal()">+ טורניר חדש</button>
+      </div>
+
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr><th>תאריך</th><th>שם</th><th>כניסה</th><th>שחקנים</th><th>סטטוס</th><th>פעולות</th></tr>
+          </thead>
+          <tbody id="t-body"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal-overlay" id="create-modal">
+    <div class="modal">
+      <div class="modal-title" id="modal-title">טורניר חדש</div>
+      <form id="t-form">
+        <input type="hidden" id="t-id">
+        <div class="form-group">
+          <label class="form-label">שם הטורניר</label>
+          <input class="form-input" id="t-title" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">תאריך</label>
+            <input class="form-input" type="date" id="t-date" required dir="ltr">
+          </div>
+          <div class="form-group">
+            <label class="form-label">שעה</label>
+            <input class="form-input" type="time" id="t-time" value="{{WEEKLY_TIME}}" dir="ltr">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">דמי כניסה ({{CURRENCY}})</label>
+            <input class="form-input" type="number" id="t-fee" value="{{ENTRY_FEE}}" dir="ltr">
+          </div>
+          <div class="form-group">
+            <label class="form-label">מקס' שחקנים</label>
+            <input class="form-input" type="number" id="t-max" value="{{MAX_PLAYERS}}" dir="ltr">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">תיאור</label>
+          <textarea class="form-input" id="t-desc" rows="3"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">ביטול</button>
+          <button type="submit" class="btn btn-primary">שמור</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+
+  <script>
+    async function loadTournaments() {
+      const { data } = await db.from('tournaments').select('*').order('date', { ascending: false });
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('t-body').innerHTML = (data || []).map(t => {
+        const isPast = t.date < today;
+        const status = isPast ? '<span class="badge badge-muted">הסתיים</span>'
+          : '<span class="badge badge-success">פעיל</span>';
+        return `<tr>
+          <td>${new Date(t.date).toLocaleDateString('he-IL')}</td>
+          <td><strong>${t.title || '-'}</strong></td>
+          <td>{{CURRENCY}}${t.entry_fee || {{ENTRY_FEE}}}</td>
+          <td>${t.registered_count || 0}/${t.max_players || {{MAX_PLAYERS}}}</td>
+          <td>${status}</td>
+          <td><button class="btn btn-secondary" style="padding:4px 12px;font-size:12px" onclick="editTournament(${t.id})">ערוך</button></td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="6" class="text-center text-muted">אין טורנירים</td></tr>';
+    }
+
+    function showCreateModal() {
+      document.getElementById('modal-title').textContent = 'טורניר חדש';
+      document.getElementById('t-form').reset();
+      document.getElementById('t-id').value = '';
+      document.getElementById('create-modal').classList.add('active');
+    }
+
+    async function editTournament(id) {
+      const { data: t } = await db.from('tournaments').select('*').eq('id', id).single();
+      if (!t) return;
+      document.getElementById('modal-title').textContent = 'עריכת טורניר';
+      document.getElementById('t-id').value = t.id;
+      document.getElementById('t-title').value = t.title || '';
+      document.getElementById('t-date').value = t.date || '';
+      document.getElementById('t-time').value = t.time || '{{WEEKLY_TIME}}';
+      document.getElementById('t-fee').value = t.entry_fee || {{ENTRY_FEE}};
+      document.getElementById('t-max').value = t.max_players || {{MAX_PLAYERS}};
+      document.getElementById('t-desc').value = t.description || '';
+      document.getElementById('create-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('create-modal').classList.remove('active');
+    }
+
+    document.getElementById('t-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('t-id').value;
+      const row = {
+        title: document.getElementById('t-title').value,
+        date: document.getElementById('t-date').value,
+        time: document.getElementById('t-time').value,
+        entry_fee: parseInt(document.getElementById('t-fee').value),
+        max_players: parseInt(document.getElementById('t-max').value),
+        description: document.getElementById('t-desc').value
+      };
+      if (id) {
+        await db.from('tournaments').update(row).eq('id', id);
+      } else {
+        await db.from('tournaments').insert(row);
+      }
+      closeModal();
+      loadTournaments();
+    };
+
+    // Auth check
+    db.auth.getUser().then(({ data: { user } }) => {
+      if (!user) location.href = '../login.html';
+      else loadTournaments();
+    });
+  </script>
+</body>
+</html>

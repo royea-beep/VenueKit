@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>גלריה — {{VENUE_NAME}}</title>
+  <meta name="description" content="תמונות מהטורנירים של {{VENUE_NAME}}">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&family={{FONT_MONO}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <img src="{{LOGO_PATH}}" alt="{{VENUE_NAME}}">
+      <span>{{VENUE_NAME}}</span>
+    </a>
+    <ul class="navbar-links">
+      <li><a href="index.html">ראשי</a></li>
+      <li><a href="tournaments.html">טורנירים</a></li>
+      {{#if league}}<li><a href="league.html">ליגה</a></li>{{/if}}
+      <li><a href="gallery.html" class="active">גלריה</a></li>
+      {{#if winners}}<li><a href="winners.html">זוכים</a></li>{{/if}}
+      <li><a href="login.html">התחברות</a></li>
+    </ul>
+  </nav>
+
+  <section class="section">
+    <h1 class="section-title">גלריה</h1>
+    <div class="grid grid-3" id="gallery-grid" style="gap:8px"></div>
+    <div class="text-center" style="margin-top:20px">
+      <button class="btn btn-secondary" id="btn-more" style="display:none">טען עוד</button>
+    </div>
+  </section>
+
+  <!-- Lightbox -->
+  <div id="lightbox" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.9);align-items:center;justify-content:center">
+    <button onclick="closeLightbox()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer">&times;</button>
+    <img id="lb-img" style="max-width:90%;max-height:90%;border-radius:8px">
+    <p id="lb-caption" style="position:absolute;bottom:20px;text-align:center;width:100%;color:var(--text-secondary)"></p>
+  </div>
+
+  <footer class="footer">
+    <p>{{VENUE_NAME}} · {{VENUE_LOCATION}} · {{CONTACT_PHONE}}</p>
+    <p style="margin-top:8px">&copy; {{YEAR}} כל הזכויות שמורות</p>
+  </footer>
+
+  <nav class="bottom-nav">
+    <ul class="bottom-nav-items">
+      <li><a href="index.html">🏠<span>ראשי</span></a></li>
+      <li><a href="tournaments.html">🎯<span>טורנירים</span></a></li>
+      {{#if league}}<li><a href="league.html">🏆<span>ליגה</span></a></li>{{/if}}
+      <li><a href="gallery.html" class="active">📸<span>גלריה</span></a></li>
+      <li><a href="profile.html">👤<span>פרופיל</span></a></li>
+    </ul>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+
+  <script>
+    let page = 0;
+    const PAGE_SIZE = 18;
+
+    function openLightbox(url, caption) {
+      document.getElementById('lb-img').src = url;
+      document.getElementById('lb-caption').textContent = caption || '';
+      document.getElementById('lightbox').style.display = 'flex';
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').style.display = 'none';
+    }
+    document.getElementById('lightbox').onclick = (e) => {
+      if (e.target.id === 'lightbox') closeLightbox();
+    };
+
+    async function loadGallery() {
+      const { data: photos } = await db.from('gallery')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+      const grid = document.getElementById('gallery-grid');
+      if (!photos || photos.length === 0) {
+        if (page === 0) grid.innerHTML = '<p class="text-center text-muted" style="grid-column:1/-1">עוד אין תמונות בגלריה</p>';
+        document.getElementById('btn-more').style.display = 'none';
+        return;
+      }
+
+      grid.innerHTML += photos.map(p => `
+        <div class="gallery-item" onclick="openLightbox('${p.photo_url}','${(p.caption || '').replace(/'/g, "\\'")}')" style="cursor:pointer;border-radius:var(--radius-sm);overflow:hidden;aspect-ratio:1">
+          <img src="${p.photo_url}" alt="${p.caption || ''}" loading="lazy" style="width:100%;height:100%;object-fit:cover;transition:transform .3s" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        </div>
+      `).join('');
+
+      document.getElementById('btn-more').style.display = photos.length === PAGE_SIZE ? 'inline-block' : 'none';
+      page++;
+    }
+
+    document.getElementById('btn-more').onclick = loadGallery;
+    loadGallery();
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>

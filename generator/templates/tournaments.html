@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>טורנירים — {{VENUE_NAME}}</title>
+  <meta name="description" content="טורנירים קרובים ב{{VENUE_NAME}} | {{VENUE_LOCATION}}">
+  <meta property="og:title" content="טורנירים — {{VENUE_NAME}}">
+  <meta property="og:image" content="{{SITE_URL}}/images/logo.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&family={{FONT_MONO}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <img src="{{LOGO_PATH}}" alt="{{VENUE_NAME}}">
+      <span>{{VENUE_NAME}}</span>
+    </a>
+    <ul class="navbar-links">
+      <li><a href="index.html">ראשי</a></li>
+      <li><a href="tournaments.html" class="active">טורנירים</a></li>
+      {{#if league}}<li><a href="league.html">ליגה</a></li>{{/if}}
+      {{#if gallery}}<li><a href="gallery.html">גלריה</a></li>{{/if}}
+      {{#if winners}}<li><a href="winners.html">זוכים</a></li>{{/if}}
+      <li><a href="login.html">התחברות</a></li>
+    </ul>
+  </nav>
+
+  <section class="section">
+    <h1 class="section-title">טורנירים קרובים</h1>
+    <div class="grid grid-2" id="upcoming"></div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">טורנירים שהסתיימו</h2>
+    <div class="grid grid-2" id="past"></div>
+  </section>
+
+  <footer class="footer">
+    <p>{{VENUE_NAME}} · {{VENUE_LOCATION}} · {{CONTACT_PHONE}}</p>
+    <p style="margin-top:8px">&copy; {{YEAR}} כל הזכויות שמורות</p>
+  </footer>
+
+  <nav class="bottom-nav">
+    <ul class="bottom-nav-items">
+      <li><a href="index.html">🏠<span>ראשי</span></a></li>
+      <li><a href="tournaments.html" class="active">🎯<span>טורנירים</span></a></li>
+      {{#if league}}<li><a href="league.html">🏆<span>ליגה</span></a></li>{{/if}}
+      {{#if gallery}}<li><a href="gallery.html">📸<span>גלריה</span></a></li>{{/if}}
+      <li><a href="profile.html">👤<span>פרופיל</span></a></li>
+    </ul>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+
+  <script>
+    const today = new Date().toISOString().split('T')[0];
+
+    function renderCard(t, isPast) {
+      const date = new Date(t.date).toLocaleDateString('he-IL');
+      const pct = Math.min(100, Math.round((t.registered_count || 0) / (t.max_players || {{MAX_PLAYERS}}) * 100));
+      const statusBadge = isPast
+        ? '<span class="badge badge-muted">הסתיים</span>'
+        : pct >= 100
+          ? '<span class="badge badge-danger">מלא</span>'
+          : '<span class="badge badge-success">פתוח להרשמה</span>';
+      return `
+        <a href="tournament.html?id=${t.id}" class="card tournament-card">
+          ${statusBadge}
+          <div class="date">${date}</div>
+          <div class="card-title">${t.title || 'טורניר'}</div>
+          <div class="fee">{{CURRENCY}}${t.entry_fee || {{ENTRY_FEE}}}</div>
+          <div class="details">
+            <span>🕐 ${t.time || '{{WEEKLY_TIME}}'}</span>
+            <span>👥 ${t.registered_count || 0}/${t.max_players || {{MAX_PLAYERS}}}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        </a>`;
+    }
+
+    (async function() {
+      const { data: upcoming } = await db.from('tournaments')
+        .select('*').gte('date', today).order('date', { ascending: true });
+      const { data: past } = await db.from('tournaments')
+        .select('*').lt('date', today).order('date', { ascending: false }).limit(20);
+
+      document.getElementById('upcoming').innerHTML = upcoming && upcoming.length
+        ? upcoming.map(t => renderCard(t, false)).join('')
+        : '<p class="text-center text-muted">אין טורנירים קרובים כרגע</p>';
+
+      document.getElementById('past').innerHTML = past && past.length
+        ? past.map(t => renderCard(t, true)).join('')
+        : '<p class="text-center text-muted">עוד אין היסטוריית טורנירים</p>';
+    })();
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>

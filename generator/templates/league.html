@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ליגה — {{VENUE_NAME}}</title>
+  <meta name="description" content="טבלת ליגה ודירוג שחקנים | {{VENUE_NAME}}">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW}}:wght@300;400;600;700;800&family={{FONT_MONO}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">
+      <img src="{{LOGO_PATH}}" alt="{{VENUE_NAME}}">
+      <span>{{VENUE_NAME}}</span>
+    </a>
+    <ul class="navbar-links">
+      <li><a href="index.html">ראשי</a></li>
+      <li><a href="tournaments.html">טורנירים</a></li>
+      <li><a href="league.html" class="active">ליגה</a></li>
+      {{#if gallery}}<li><a href="gallery.html">גלריה</a></li>{{/if}}
+      {{#if winners}}<li><a href="winners.html">זוכים</a></li>{{/if}}
+      <li><a href="login.html">התחברות</a></li>
+    </ul>
+  </nav>
+
+  <section class="section">
+    <h1 class="section-title">טבלת ליגה</h1>
+    <div id="league-info" class="text-center text-muted" style="margin-bottom:20px"></div>
+    <div class="card" style="max-width:800px;margin:0 auto">
+      <table class="data-table" id="league-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>שחקן</th>
+            <th>נקודות</th>
+            <th>טורנירים</th>
+            <th>מקום הכי טוב</th>
+            <th>סה"כ פרסים</th>
+          </tr>
+        </thead>
+        <tbody id="league-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>{{VENUE_NAME}} · {{VENUE_LOCATION}} · {{CONTACT_PHONE}}</p>
+    <p style="margin-top:8px">&copy; {{YEAR}} כל הזכויות שמורות</p>
+  </footer>
+
+  <nav class="bottom-nav">
+    <ul class="bottom-nav-items">
+      <li><a href="index.html">🏠<span>ראשי</span></a></li>
+      <li><a href="tournaments.html">🎯<span>טורנירים</span></a></li>
+      <li><a href="league.html" class="active">🏆<span>ליגה</span></a></li>
+      {{#if gallery}}<li><a href="gallery.html">📸<span>גלריה</span></a></li>{{/if}}
+      <li><a href="profile.html">👤<span>פרופיל</span></a></li>
+    </ul>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+
+  <script>
+    (async function() {
+      // Get active league
+      const { data: league } = await db.from('leagues').select('*')
+        .eq('is_active', true).single();
+
+      if (!league) {
+        document.getElementById('league-body').innerHTML = '<tr><td colspan="6" class="text-center text-muted">אין ליגה פעילה כרגע</td></tr>';
+        return;
+      }
+
+      document.getElementById('league-info').innerHTML =
+        `<strong>${league.name}</strong>${league.season ? ' · עונה ' + league.season : ''}`;
+
+      const { data: standings } = await db.from('league_standings')
+        .select('*').eq('league_id', league.id).order('points', { ascending: false });
+
+      if (!standings || standings.length === 0) {
+        document.getElementById('league-body').innerHTML = '<tr><td colspan="6" class="text-center text-muted">אין נתונים עדיין</td></tr>';
+        return;
+      }
+
+      document.getElementById('league-body').innerHTML = standings.map((s, i) => {
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+        return `<tr${i < 3 ? ' class="highlight-row"' : ''}>
+          <td>${medal} ${i + 1}</td>
+          <td><strong>${s.player_name || 'שחקן'}</strong></td>
+          <td>${s.points || 0}</td>
+          <td>${s.tournaments_played || 0}</td>
+          <td>${s.best_finish || '-'}</td>
+          <td>{{CURRENCY}}${s.total_prizes || 0}</td>
+        </tr>`;
+      }).join('');
+    })();
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>
