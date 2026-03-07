@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ניהול גלריה — {{VENUE_NAME}}</title>
+  <link rel="icon" href="../images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW_URL}}:wght@300;400;600;700;800&family={{FONT_MONO_URL}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .upload-area {
+      border: 2px dashed var(--border); border-radius: var(--radius-sm);
+      padding: 32px; text-align: center; cursor: pointer;
+      transition: all .2s;
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: var(--primary); background: rgba(232,34,58,.05);
+    }
+    .upload-previews {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px; margin-top: 12px;
+    }
+    .upload-previews img {
+      width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-sm);
+    }
+    .gallery-admin-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .gallery-admin-item {
+      position: relative; border-radius: var(--radius-sm); overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .gallery-admin-item img {
+      width: 100%; aspect-ratio: 1; object-fit: cover; display: block;
+    }
+    .gallery-admin-item .overlay {
+      position: absolute; inset: 0; background: rgba(0,0,0,.6);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .2s;
+    }
+    .gallery-admin-item:hover .overlay { opacity: 1; }
+    .gallery-admin-item .caption {
+      padding: 6px 8px; font-size: 11px; color: var(--text-muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .upload-progress {
+      height: 4px; background: var(--border); border-radius: 2px;
+      margin-top: 8px; overflow: hidden; display: none;
+    }
+    .upload-progress .bar {
+      height: 100%; background: var(--primary); border-radius: 2px;
+      transition: width .3s;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <nav class="admin-sidebar">
+      <div style="padding:12px 20px;margin-bottom:12px;border-bottom:1px solid var(--border)">
+        <strong style="font-size:14px">{{VENUE_NAME}}</strong>
+        <div class="text-muted" style="font-size:12px">ניהול</div>
+      </div>
+      <a href="index.html">📊 דשבורד</a>
+      <a href="tournaments.html">🎯 טורנירים</a>
+      <a href="players.html">👥 שחקנים</a>
+      {{#if league}}<a href="leagues.html">🏆 ליגה</a>{{/if}}
+      {{#if winners}}<a href="winners.html">🥇 זוכים</a>{{/if}}
+      {{#if gallery}}<a href="gallery.html" class="active">📸 גלריה</a>{{/if}}
+      {{#if notifications}}<a href="notifications.html">🔔 התראות</a>{{/if}}
+      <a href="../index.html">← חזרה לאתר</a>
+    </nav>
+
+    <main class="admin-content">
+      <h1 style="margin-bottom:4px">ניהול גלריה</h1>
+      <p class="text-muted" style="margin-bottom:24px;font-size:13px">העלאה וניהול תמונות מטורנירים</p>
+
+      <!-- Upload Section -->
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="margin-bottom:12px">העלאת תמונות</h3>
+        <div class="form-group">
+          <label class="form-label">טורניר (אופציונלי)</label>
+          <select class="form-select" id="g-tournament">
+            <option value="">ללא שיוך לטורניר</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">כיתוב</label>
+          <input type="text" class="form-input" id="g-caption" placeholder="תיאור קצר של התמונה">
+        </div>
+        <div class="upload-area" id="upload-area" onclick="document.getElementById('g-file-input').click()">
+          <div style="font-size:28px;margin-bottom:8px">📸</div>
+          <div style="font-size:14px;color:var(--text-secondary)">גרור תמונות לכאן או לחץ לבחירה</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">JPG, PNG — ניתן לבחור מספר תמונות — עד 5MB לתמונה</div>
+          <input type="file" id="g-file-input" accept="image/*" multiple style="display:none" onchange="previewFiles(this)">
+        </div>
+        <div class="upload-previews" id="g-previews"></div>
+        <div class="upload-progress" id="g-progress">
+          <div class="bar" id="g-progress-bar" style="width:0%"></div>
+        </div>
+        <p id="g-status" class="text-muted" style="font-size:12px;margin-top:8px"></p>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="uploadPhotos()">העלה תמונות</button>
+      </div>
+
+      <!-- Existing Photos -->
+      <div class="card">
+        <div class="flex-between" style="margin-bottom:12px">
+          <h3>תמונות קיימות</h3>
+          <span class="badge badge-muted" id="photo-count">0</span>
+        </div>
+        <div class="gallery-admin-grid" id="gallery-grid">
+          <p class="text-muted" style="grid-column:1/-1;text-align:center;padding:24px">טוען...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+
+  <script>
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('g-file-input');
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      fileInput.files = e.dataTransfer.files;
+      previewFiles(fileInput);
+    });
+
+    (async function() {
+      // Auth check
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) { location.href = '../login.html'; return; }
+
+      await loadTournamentOptions();
+      await loadGallery();
+    })();
+
+    async function loadTournamentOptions() {
+      try {
+        const { data } = await db.from('tournaments')
+          .select('id, title, date')
+          .order('date', { ascending: false })
+          .limit(50);
+
+        const select = document.getElementById('g-tournament');
+        if (data) {
+          data.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = (t.title || 'טורניר') + ' — ' + new Date(t.date).toLocaleDateString('he-IL');
+            select.appendChild(opt);
+          });
+        }
+      } catch (err) {
+        console.error('Error loading tournaments:', err);
+      }
+    }
+
+    function previewFiles(input) {
+      const container = document.getElementById('g-previews');
+      container.innerHTML = '';
+
+      if (!input.files || input.files.length === 0) return;
+
+      const validFiles = [];
+      for (const file of input.files) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`הקובץ ${file.name} גדול מ-5MB ולא ייכלל`);
+          continue;
+        }
+        validFiles.push(file);
+      }
+
+      validFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      document.getElementById('g-status').textContent = validFiles.length + ' תמונות נבחרו';
+    }
+
+    async function uploadPhotos() {
+      const files = fileInput.files;
+      if (!files || files.length === 0) {
+        alert('נא לבחור תמונות להעלאה');
+        return;
+      }
+
+      const tournamentId = document.getElementById('g-tournament').value || null;
+      const caption = document.getElementById('g-caption').value.trim();
+      const progress = document.getElementById('g-progress');
+      const progressBar = document.getElementById('g-progress-bar');
+      const status = document.getElementById('g-status');
+
+      progress.style.display = 'block';
+      let uploaded = 0;
+      const total = files.length;
+
+      try {
+        for (const file of files) {
+          if (file.size > 5 * 1024 * 1024) continue;
+
+          const ext = file.name.split('.').pop();
+          const fileName = `gallery_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+          // Upload to storage
+          const { error: uploadError } = await db.storage
+            .from('{{BUCKET_GALLERY}}')
+            .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+          if (uploadError) {
+            console.error('Upload error:', uploadError);
+            continue;
+          }
+
+          // Get public URL
+          const { data: urlData } = db.storage
+            .from('{{BUCKET_GALLERY}}')
+            .getPublicUrl(fileName);
+
+          // Save record
+          const { error: insertError } = await db.from('gallery').insert({
+            photo_url: urlData.publicUrl,
+            photo_path: fileName,
+            caption: caption || null,
+            tournament_id: tournamentId
+          });
+
+          if (insertError) {
+            console.error('Insert error:', insertError);
+          }
+
+          uploaded++;
+          progressBar.style.width = Math.round((uploaded / total) * 100) + '%';
+          status.textContent = `הועלו ${uploaded} מתוך ${total}`;
+        }
+
+        // Reset form
+        fileInput.value = '';
+        document.getElementById('g-previews').innerHTML = '';
+        document.getElementById('g-caption').value = '';
+
+        setTimeout(() => {
+          progress.style.display = 'none';
+          progressBar.style.width = '0%';
+        }, 2000);
+
+        status.textContent = `הועלו ${uploaded} תמונות בהצלחה!`;
+        await loadGallery();
+      } catch (err) {
+        console.error('Upload error:', err);
+        status.textContent = 'שגיאה בהעלאה: ' + (err.message || err);
+      }
+    }
+
+    async function loadGallery() {
+      try {
+        const { data, error } = await db.from('gallery')
+          .select('*, tournaments(title)')
+          .order('created_at', { ascending: false });
+
+        const grid = document.getElementById('gallery-grid');
+        const countEl = document.getElementById('photo-count');
+
+        if (error || !data || data.length === 0) {
+          grid.innerHTML = '<p class="text-muted" style="grid-column:1/-1;text-align:center;padding:24px">אין תמונות עדיין</p>';
+          countEl.textContent = '0';
+          return;
+        }
+
+        countEl.textContent = data.length;
+
+        grid.innerHTML = data.map(p => `
+          <div class="gallery-admin-item">
+            <img src="${p.photo_url}" alt="${p.caption || ''}" loading="lazy">
+            <div class="overlay">
+              <button class="btn btn-secondary" style="padding:6px 12px;font-size:11px;color:#ef4444"
+                onclick="deletePhoto('${p.id}', '${p.photo_path || ''}')">
+                מחק
+              </button>
+            </div>
+            ${p.caption ? `<div class="caption">${p.caption}</div>` : ''}
+            ${p.tournaments?.title ? `<div class="caption" style="color:var(--primary);font-size:10px">${p.tournaments.title}</div>` : ''}
+          </div>`).join('');
+      } catch (err) {
+        console.error('Error loading gallery:', err);
+        document.getElementById('gallery-grid').innerHTML =
+          '<p class="text-muted" style="grid-column:1/-1;text-align:center;padding:24px">שגיאה בטעינה</p>';
+      }
+    }
+
+    async function deletePhoto(id, photoPath) {
+      if (!confirm('למחוק את התמונה?')) return;
+
+      try {
+        // Remove from storage
+        if (photoPath) {
+          await db.storage.from('{{BUCKET_GALLERY}}').remove([photoPath]);
+        }
+
+        const { error } = await db.from('gallery').delete().eq('id', id);
+        if (error) throw error;
+
+        await loadGallery();
+      } catch (err) {
+        console.error('Error deleting photo:', err);
+        alert('שגיאה במחיקה: ' + (err.message || err));
+      }
+    }
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>

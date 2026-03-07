@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>טיימר בליינדים — {{VENUE_NAME}}</title>
+  <meta name="theme-color" content="#0D0F14">
+  <link rel="icon" href="images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW_URL}}:wght@300;400;600;700;800&family={{FONT_MONO_URL}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { margin: 0; overflow: hidden; cursor: none; background: #000; }
+    body.show-cursor { cursor: default; }
+
+    .timer-page {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px; text-align: center;
+      background: radial-gradient(ellipse at center, var(--bg-card) 0%, #000 70%);
+    }
+
+    .timer-info-bar {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 24px; background: rgba(0,0,0,.8); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border); font-size: 14px; z-index: 10;
+    }
+    .timer-info-bar .info-item { color: var(--text-secondary); }
+    .timer-info-bar .info-value { color: var(--text-primary); font-weight: 700; margin-right: 6px; }
+
+    .timer-level-label {
+      font-size: clamp(24px, 4vw, 48px); font-weight: 300;
+      color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 2px;
+    }
+
+    .timer-blinds-display {
+      font-size: clamp(40px, 8vw, 96px); font-weight: 800;
+      font-family: var(--font-mono); color: var(--text-primary);
+      margin-bottom: 4px; line-height: 1.1;
+    }
+
+    .timer-ante-display {
+      font-size: clamp(18px, 3vw, 36px); font-weight: 600;
+      color: var(--secondary); margin-bottom: 24px;
+    }
+
+    .timer-clock {
+      font-size: clamp(80px, 18vw, 200px); font-weight: 800;
+      font-family: var(--font-mono); color: var(--primary);
+      line-height: 1; margin-bottom: 16px;
+      text-shadow: 0 0 40px rgba(232,34,58,.3);
+    }
+    .timer-clock.urgent { color: #ef4444; animation: pulse 1s infinite; }
+
+    .timer-paused-indicator {
+      font-size: clamp(28px, 5vw, 56px); font-weight: 800;
+      color: var(--secondary); letter-spacing: 4px;
+      animation: pulse 2s infinite; display: none;
+    }
+
+    .timer-next-level {
+      font-size: clamp(16px, 2.5vw, 28px); color: var(--text-muted);
+      margin-top: 16px;
+    }
+    .timer-next-level strong { color: var(--text-secondary); }
+
+    .timer-progress-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 6px;
+      background: rgba(255,255,255,.06);
+    }
+    .timer-progress-fill {
+      height: 100%; background: var(--primary); transition: width 1s linear;
+      border-radius: 0 3px 3px 0;
+    }
+
+    .timer-break .timer-blinds-display { color: var(--secondary); }
+    .timer-break .timer-clock { color: var(--secondary); text-shadow: 0 0 40px rgba(232,184,41,.3); }
+    .timer-break .timer-progress-fill { background: var(--secondary); }
+
+    .timer-controls {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 12px; opacity: 0; transition: opacity .3s; z-index: 20;
+    }
+    body.show-cursor .timer-controls { opacity: 1; }
+
+    .timer-waiting {
+      display: none; text-align: center; margin-top: 2rem;
+    }
+    .timer-waiting p { color: var(--text-muted); font-size: clamp(16px, 2vw, 24px); }
+
+    .btn-timer {
+      padding: 10px 20px; border-radius: var(--radius-sm);
+      font-family: var(--font-main); font-size: 14px; font-weight: 700;
+      border: 1px solid var(--border-accent); cursor: pointer;
+      background: rgba(255,255,255,.08); color: var(--text-primary);
+      transition: all .2s;
+    }
+    .btn-timer:hover { background: rgba(255,255,255,.15); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .5; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Info Bar -->
+  <div class="timer-info-bar" id="timer-info-bar" style="display:none">
+    <div class="info-item"><span class="info-value" id="ti-name">--</span></div>
+    <div class="info-item">שחקנים: <span class="info-value" id="ti-players">--</span></div>
+    <div class="info-item">ממוצע: <span class="info-value" id="ti-avg">--</span></div>
+    <div class="info-item">{{VENUE_NAME}}</div>
+  </div>
+
+  <!-- Timer Display -->
+  <div class="timer-page" id="timer-page">
+    <div class="timer-level-label" id="t-level">--</div>
+    <div class="timer-blinds-display" id="t-blinds">--</div>
+    <div class="timer-ante-display" id="t-ante"></div>
+    <div class="timer-clock" id="t-clock">00:00</div>
+    <div class="timer-paused-indicator" id="t-paused">PAUSED</div>
+    <div class="timer-next-level" id="t-next"></div>
+    <div class="timer-waiting" id="t-waiting">
+      <p>ממתין להפעלת הטיימר...</p>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="timer-progress-bar">
+    <div class="timer-progress-fill" id="t-progress" style="width:100%"></div>
+  </div>
+
+  <!-- Controls (visible on hover) -->
+  <div class="timer-controls" id="timer-controls">
+    <button class="btn-timer" id="ctrl-pause" onclick="togglePause()">השהה</button>
+    <button class="btn-timer" onclick="toggleFullscreen()">מסך מלא</button>
+    <button class="btn-timer" onclick="skipLevel()">דלג שלב</button>
+  </div>
+
+  {{#if error_tracking}}<script src="js/errorHandler.js"></script>{{/if}}
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/utils.js"></script>
+
+  <script>
+    let tournament = null;
+    let blindsStructure = [];
+    let currentLevel = 0;
+    let remaining = 0;
+    let isPaused = false;
+    let isRunning = false;
+    let timerInterval = null;
+    let isAdmin = false;
+
+    // Show cursor on mouse movement, hide after 3s
+    let cursorTimeout;
+    document.addEventListener('mousemove', () => {
+      document.body.classList.add('show-cursor');
+      clearTimeout(cursorTimeout);
+      cursorTimeout = setTimeout(() => document.body.classList.remove('show-cursor'), 3000);
+    });
+
+    // Fullscreen on click (non-control area)
+    document.getElementById('timer-page').addEventListener('click', (e) => {
+      if (e.target.closest('.timer-controls')) return;
+      toggleFullscreen();
+    });
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function togglePause() {
+      if (!isRunning) return;
+      isPaused = !isPaused;
+      document.getElementById('t-paused').style.display = isPaused ? 'block' : 'none';
+      document.getElementById('ctrl-pause').textContent = isPaused ? 'המשך' : 'השהה';
+
+      if (isPaused) {
+        clearInterval(timerInterval);
+      } else {
+        startCountdown();
+      }
+
+      // Persist pause state
+      if (tournament && isAdmin) {
+        const timerState = tournament.timer_state || {};
+        timerState.paused = isPaused;
+        timerState.remaining = remaining;
+        db.from('tournaments').update({ timer_state: timerState }).eq('id', tournament.id).then(() => {});
+      }
+    }
+
+    function skipLevel() {
+      if (!isRunning || !isAdmin) return;
+      if (currentLevel < blindsStructure.length - 1) {
+        currentLevel++;
+        remaining = (blindsStructure[currentLevel].duration || 20) * 60;
+        updateDisplay();
+        persistState();
+      }
+    }
+
+    function persistState() {
+      if (!tournament || !isAdmin) return;
+      const timerState = {
+        active: true,
+        paused: isPaused,
+        current_level: currentLevel,
+        remaining: remaining
+      };
+      db.from('tournaments').update({ timer_state: timerState }).eq('id', tournament.id).then(() => {});
+    }
+
+    function formatTime(seconds) {
+      if (seconds <= 0) return '00:00';
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function formatChips(n) {
+      if (!n) return '0';
+      if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
+      if (n >= 1000) return (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + 'K';
+      return n.toLocaleString();
+    }
+
+    function isBreak(level) {
+      return level && (level.is_break === true || level.type === 'break');
+    }
+
+    function updateDisplay() {
+      const level = blindsStructure[currentLevel];
+      if (!level) return;
+
+      const page = document.getElementById('timer-page');
+      const brk = isBreak(level);
+      page.classList.toggle('timer-break', brk);
+
+      // Level label
+      document.getElementById('t-level').textContent = brk
+        ? 'הפסקה'
+        : 'שלב ' + (currentLevel + 1);
+
+      // Blinds
+      document.getElementById('t-blinds').textContent = brk
+        ? 'הפסקה'
+        : formatChips(level.sb) + ' / ' + formatChips(level.bb);
+
+      // Ante
+      document.getElementById('t-ante').textContent = (!brk && level.ante)
+        ? 'Ante ' + formatChips(level.ante)
+        : '';
+
+      // Clock
+      const clockEl = document.getElementById('t-clock');
+      clockEl.textContent = formatTime(remaining);
+      clockEl.classList.toggle('urgent', remaining > 0 && remaining <= 60 && !brk);
+
+      // Next level
+      const nextEl = document.getElementById('t-next');
+      const nextLevel = blindsStructure[currentLevel + 1];
+      if (nextLevel) {
+        if (isBreak(nextLevel)) {
+          nextEl.innerHTML = 'הבא: <strong>הפסקה</strong>';
+        } else {
+          nextEl.innerHTML = 'הבא: <strong>' + formatChips(nextLevel.sb) + ' / ' + formatChips(nextLevel.bb) + '</strong>';
+        }
+      } else {
+        nextEl.textContent = 'שלב אחרון';
+      }
+
+      // Progress
+      const totalDuration = (level.duration || 20) * 60;
+      const pct = totalDuration > 0 ? (remaining / totalDuration) * 100 : 0;
+      document.getElementById('t-progress').style.width = pct + '%';
+    }
+
+    function startCountdown() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (isPaused) return;
+        remaining--;
+
+        if (remaining <= 0) {
+          // Move to next level
+          if (currentLevel < blindsStructure.length - 1) {
+            currentLevel++;
+            remaining = (blindsStructure[currentLevel].duration || 20) * 60;
+            persistState();
+            // Play sound on level change
+            try {
+              const ctx = new (window.AudioContext || window.webkitAudioContext)();
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.frequency.value = 880;
+              gain.gain.value = 0.3;
+              osc.start();
+              osc.stop(ctx.currentTime + 0.5);
+            } catch (e) {}
+          } else {
+            clearInterval(timerInterval);
+            isRunning = false;
+          }
+        }
+
+        updateDisplay();
+      }, 1000);
+    }
+
+    function getDefaultBlinds() {
+      return [
+        { sb: 25, bb: 50, ante: 0, duration: 20 },
+        { sb: 50, bb: 100, ante: 0, duration: 20 },
+        { sb: 75, bb: 150, ante: 0, duration: 20 },
+        { sb: 100, bb: 200, ante: 25, duration: 20 },
+        { sb: 150, bb: 300, ante: 25, duration: 20 },
+        { sb: 200, bb: 400, ante: 50, duration: 20 },
+        { is_break: true, duration: 10 },
+        { sb: 300, bb: 600, ante: 75, duration: 15 },
+        { sb: 400, bb: 800, ante: 100, duration: 15 },
+        { sb: 500, bb: 1000, ante: 100, duration: 15 },
+        { sb: 700, bb: 1400, ante: 200, duration: 15 },
+        { sb: 1000, bb: 2000, ante: 300, duration: 15 },
+        { is_break: true, duration: 10 },
+        { sb: 1500, bb: 3000, ante: 400, duration: 12 },
+        { sb: 2000, bb: 4000, ante: 500, duration: 12 },
+        { sb: 3000, bb: 6000, ante: 1000, duration: 12 },
+        { sb: 5000, bb: 10000, ante: 1000, duration: 10 },
+        { sb: 7500, bb: 15000, ante: 2000, duration: 10 },
+        { sb: 10000, bb: 20000, ante: 3000, duration: 10 }
+      ];
+    }
+
+    async function initTimer() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+
+      if (!id) {
+        document.getElementById('t-clock').textContent = 'NO ID';
+        return;
+      }
+
+      try {
+        const { data: t, error } = await db
+          .from('tournaments')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error || !t) {
+          document.getElementById('t-clock').textContent = 'NOT FOUND';
+          return;
+        }
+
+        tournament = t;
+        document.title = (t.title || 'טורניר') + ' — טיימר';
+
+        // Show info bar
+        const infoBar = document.getElementById('timer-info-bar');
+        infoBar.style.display = 'flex';
+        document.getElementById('ti-name').textContent = t.title || 'טורניר';
+
+        // Load player count
+        const { count } = await db.from('registrations')
+          .select('*', { count: 'exact', head: true })
+          .eq('tournament_id', id);
+        const playerCount = count || 0;
+        document.getElementById('ti-players').textContent = playerCount;
+
+        // Average stack
+        const startingStack = t.starting_stack || {{STARTING_STACK}};
+        const avgStack = playerCount > 0 ? Math.round((startingStack * playerCount) / Math.max(playerCount, 1)) : startingStack;
+        document.getElementById('ti-avg').textContent = formatChips(avgStack);
+
+        // Check admin
+        try {
+          const { data: { user } } = await db.auth.getUser();
+          isAdmin = !!user;
+        } catch (e) {
+          isAdmin = false;
+        }
+
+        // Hide controls for non-admin
+        if (!isAdmin) {
+          document.getElementById('timer-controls').style.display = 'none';
+        }
+
+        // Load blinds structure
+        blindsStructure = (t.blinds_structure && Array.isArray(t.blinds_structure))
+          ? t.blinds_structure
+          : getDefaultBlinds();
+
+        // Restore timer state
+        const ts = t.timer_state;
+        if (ts && ts.active) {
+          currentLevel = ts.current_level || 0;
+          remaining = ts.remaining || (blindsStructure[currentLevel].duration || 20) * 60;
+          isPaused = ts.paused || false;
+
+          document.getElementById('t-waiting').style.display = 'none';
+          document.getElementById('t-paused').style.display = isPaused ? 'block' : 'none';
+          document.getElementById('ctrl-pause').textContent = isPaused ? 'המשך' : 'השהה';
+
+          isRunning = true;
+          updateDisplay();
+          if (!isPaused) startCountdown();
+        } else {
+          // No active timer — show waiting
+          document.getElementById('t-waiting').style.display = 'block';
+          document.getElementById('t-clock').style.display = 'none';
+          document.getElementById('t-blinds').style.display = 'none';
+          document.getElementById('t-level').style.display = 'none';
+          document.getElementById('t-ante').style.display = 'none';
+          document.getElementById('t-next').style.display = 'none';
+        }
+
+        // Subscribe to realtime updates
+        db.channel('timer-' + id)
+          .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tournaments',
+            filter: 'id=eq.' + id
+          }, (payload) => {
+            const updated = payload.new;
+            if (!updated || !updated.timer_state) return;
+            const ts = updated.timer_state;
+
+            if (ts.active && !isRunning) {
+              // Timer started
+              document.getElementById('t-waiting').style.display = 'none';
+              document.getElementById('t-clock').style.display = '';
+              document.getElementById('t-blinds').style.display = '';
+              document.getElementById('t-level').style.display = '';
+              document.getElementById('t-ante').style.display = '';
+              document.getElementById('t-next').style.display = '';
+              isRunning = true;
+            }
+
+            currentLevel = ts.current_level || 0;
+            remaining = ts.remaining || (blindsStructure[currentLevel].duration || 20) * 60;
+            isPaused = ts.paused || false;
+
+            document.getElementById('t-paused').style.display = isPaused ? 'block' : 'none';
+            document.getElementById('ctrl-pause').textContent = isPaused ? 'המשך' : 'השהה';
+
+            updateDisplay();
+            if (isRunning && !isPaused) {
+              startCountdown();
+            } else {
+              clearInterval(timerInterval);
+            }
+          })
+          .subscribe();
+
+      } catch (err) {
+        console.error('Timer init error:', err);
+        document.getElementById('t-clock').textContent = 'ERROR';
+      }
+    }
+
+    initTimer();
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>

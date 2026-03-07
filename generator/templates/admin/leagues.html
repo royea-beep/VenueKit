@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ניהול ליגה — {{VENUE_NAME}}</title>
+  <link rel="icon" href="../images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW_URL}}:wght@300;400;600;700;800&family={{FONT_MONO_URL}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <nav class="admin-sidebar">
+      <div style="padding:12px 20px;margin-bottom:12px;border-bottom:1px solid var(--border)">
+        <strong style="font-size:14px">{{VENUE_NAME}}</strong>
+        <div class="text-muted" style="font-size:12px">ניהול</div>
+      </div>
+      <a href="index.html">📊 דשבורד</a>
+      <a href="tournaments.html">🎯 טורנירים</a>
+      <a href="players.html">👥 שחקנים</a>
+      {{#if league}}<a href="leagues.html" class="active">🏆 ליגה</a>{{/if}}
+      {{#if winners}}<a href="winners.html">🥇 זוכים</a>{{/if}}
+      {{#if gallery}}<a href="gallery.html">📸 גלריה</a>{{/if}}
+      {{#if notifications}}<a href="notifications.html">🔔 התראות</a>{{/if}}
+      <a href="../index.html">← חזרה לאתר</a>
+    </nav>
+
+    <main class="admin-content">
+      <h1 style="margin-bottom:4px">ניהול ליגה</h1>
+      <p class="text-muted" style="margin-bottom:24px;font-size:13px">יצירת ליגות, עדכון נקודות ודירוגים</p>
+
+      <!-- Active League Info -->
+      <div class="card" style="margin-bottom:20px" id="active-league-card">
+        <div class="flex-between" style="margin-bottom:12px">
+          <h3>ליגה פעילה</h3>
+          <span class="badge badge-success" id="league-status-badge" style="display:none">פעילה</span>
+        </div>
+        <div id="active-league-info">
+          <p class="text-muted">טוען...</p>
+        </div>
+      </div>
+
+      <!-- Create League -->
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="margin-bottom:12px">יצירת ליגה חדשה</h3>
+        <p class="text-muted" style="font-size:13px;margin-bottom:16px">
+          אם יש ליגה פעילה, היא תסומן כ"הסתיימה" אוטומטית.
+        </p>
+        <div class="form-group">
+          <label class="form-label">שם הליגה *</label>
+          <input type="text" class="form-input" id="new-league-name" placeholder="לדוגמה: ליגת אביב 2026">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">תאריך התחלה *</label>
+            <input type="date" class="form-input" id="new-league-start" dir="ltr">
+          </div>
+          <div class="form-group">
+            <label class="form-label">תאריך סיום *</label>
+            <input type="date" class="form-input" id="new-league-end" dir="ltr">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">טופ N (כמה עולים לגמר)</label>
+          <input type="number" class="form-input" id="new-league-topn" value="10" min="1" dir="ltr" style="max-width:120px">
+        </div>
+        <button class="btn btn-primary" onclick="createLeague()">צור ליגה</button>
+      </div>
+
+      <!-- Update Points -->
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="margin-bottom:12px">עדכון נקודות</h3>
+        <div class="form-group">
+          <label class="form-label">שחקן</label>
+          <select class="form-select" id="league-player-select">
+            <option value="">בחר שחקן...</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">נקודות</label>
+            <input type="number" class="form-input" id="league-points" value="0" dir="ltr">
+          </div>
+          <div class="form-group">
+            <label class="form-label">מיקום בטורניר</label>
+            <input type="number" class="form-input" id="league-finish" placeholder="1" dir="ltr" min="1">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="updatePoints()">עדכן נקודות</button>
+      </div>
+
+      <!-- Current Standings -->
+      <div class="card">
+        <div class="flex-between" style="margin-bottom:12px">
+          <h3>טבלת דירוג</h3>
+          <button class="btn btn-secondary" style="padding:8px 16px;font-size:12px" onclick="recalculateStandings()">חשב מחדש</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>שחקן</th>
+              <th>נקודות</th>
+              <th>טורנירים</th>
+              <th>שיא</th>
+              <th>פעולות</th>
+            </tr>
+          </thead>
+          <tbody id="standings-body">
+            <tr><td colspan="6" class="text-center text-muted" style="padding:24px">טוען...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Edit Standing Modal -->
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+      <div class="modal-title">עריכת דירוג</div>
+      <input type="hidden" id="edit-id">
+      <div class="form-group">
+        <label class="form-label">שחקן</label>
+        <input type="text" class="form-input" id="edit-player-name" disabled>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">נקודות</label>
+          <input type="number" class="form-input" id="edit-points" dir="ltr">
+        </div>
+        <div class="form-group">
+          <label class="form-label">טורנירים</label>
+          <input type="number" class="form-input" id="edit-tournaments" dir="ltr" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">שיא (מיקום)</label>
+        <input type="number" class="form-input" id="edit-best" dir="ltr" min="1">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn btn-primary" onclick="saveEdit()">שמור</button>
+        <button class="btn btn-secondary" onclick="closeEditModal()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+
+  <script>
+    let activeLeague = null;
+
+    (async function() {
+      // Auth check
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) { location.href = '../login.html'; return; }
+
+      await loadActiveLeague();
+      await loadPlayers();
+      await loadStandings();
+    })();
+
+    async function loadActiveLeague() {
+      try {
+        const { data, error } = await db.from('leagues')
+          .select('*')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        const infoEl = document.getElementById('active-league-info');
+
+        if (error || !data) {
+          infoEl.innerHTML = '<p class="text-muted">אין ליגה פעילה כרגע. צור ליגה חדשה למטה.</p>';
+          return;
+        }
+
+        activeLeague = data;
+        document.getElementById('league-status-badge').style.display = '';
+        infoEl.innerHTML = `
+          <div class="stats-row" style="justify-content:flex-start;margin:0">
+            <div class="stat-card"><div class="stat-value" style="font-size:16px">${data.name}</div><div class="stat-label">שם</div></div>
+            <div class="stat-card"><div class="stat-value" style="font-size:16px">${new Date(data.start_date).toLocaleDateString('he-IL')}</div><div class="stat-label">התחלה</div></div>
+            <div class="stat-card"><div class="stat-value" style="font-size:16px">${new Date(data.end_date).toLocaleDateString('he-IL')}</div><div class="stat-label">סיום</div></div>
+            <div class="stat-card"><div class="stat-value" style="font-size:16px">${data.top_n || 10}</div><div class="stat-label">טופ N</div></div>
+          </div>`;
+      } catch (err) {
+        console.error('Error loading league:', err);
+        document.getElementById('active-league-info').innerHTML = '<p class="text-muted">שגיאה בטעינת ליגה</p>';
+      }
+    }
+
+    async function loadPlayers() {
+      try {
+        const { data } = await db.from('players').select('id, name').order('name');
+        const select = document.getElementById('league-player-select');
+        if (data) {
+          data.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.name;
+            select.appendChild(opt);
+          });
+        }
+      } catch (err) {
+        console.error('Error loading players:', err);
+      }
+    }
+
+    async function loadStandings() {
+      if (!activeLeague) {
+        document.getElementById('standings-body').innerHTML =
+          '<tr><td colspan="6" class="text-center text-muted" style="padding:24px">אין ליגה פעילה</td></tr>';
+        return;
+      }
+
+      try {
+        const { data, error } = await db.from('league_standings')
+          .select('*, players(name)')
+          .eq('league_id', activeLeague.id)
+          .order('points', { ascending: false });
+
+        const tbody = document.getElementById('standings-body');
+
+        if (error || !data || data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:24px">אין נתונים עדיין</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.map((s, i) => `
+          <tr>
+            <td style="font-weight:700;color:${i < 3 ? 'var(--secondary)' : 'var(--text-primary)'}">${i + 1}</td>
+            <td>${s.players?.name || 'שחקן'}</td>
+            <td style="font-family:var(--font-mono);font-weight:700">${s.points || 0}</td>
+            <td>${s.tournaments_played || 0}</td>
+            <td>${s.best_finish || '-'}</td>
+            <td>
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px"
+                onclick="openEditModal('${s.id}', '${(s.players?.name || '').replace(/'/g, "\\'")}', ${s.points || 0}, ${s.tournaments_played || 0}, ${s.best_finish || 0})">
+                עריכה
+              </button>
+              <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;color:#ef4444"
+                onclick="deleteStanding('${s.id}')">
+                מחק
+              </button>
+            </td>
+          </tr>`).join('');
+      } catch (err) {
+        console.error('Error loading standings:', err);
+        document.getElementById('standings-body').innerHTML =
+          '<tr><td colspan="6" class="text-center text-muted" style="padding:24px">שגיאה בטעינה</td></tr>';
+      }
+    }
+
+    async function createLeague() {
+      const name = document.getElementById('new-league-name').value.trim();
+      const start = document.getElementById('new-league-start').value;
+      const end = document.getElementById('new-league-end').value;
+      const topN = parseInt(document.getElementById('new-league-topn').value) || 10;
+
+      if (!name || !start || !end) {
+        alert('נא למלא שם, תאריך התחלה ותאריך סיום');
+        return;
+      }
+
+      try {
+        // Deactivate current league
+        if (activeLeague) {
+          await db.from('leagues').update({ status: 'finished' }).eq('id', activeLeague.id);
+        }
+
+        const { data, error } = await db.from('leagues').insert({
+          name, start_date: start, end_date: end, top_n: topN, status: 'active'
+        }).select().single();
+
+        if (error) throw error;
+
+        // Clear form
+        document.getElementById('new-league-name').value = '';
+        document.getElementById('new-league-start').value = '';
+        document.getElementById('new-league-end').value = '';
+        document.getElementById('new-league-topn').value = '10';
+
+        alert('ליגה חדשה נוצרה בהצלחה!');
+        await loadActiveLeague();
+        await loadStandings();
+      } catch (err) {
+        console.error('Error creating league:', err);
+        alert('שגיאה ביצירת ליגה: ' + (err.message || err));
+      }
+    }
+
+    async function updatePoints() {
+      if (!activeLeague) { alert('אין ליגה פעילה'); return; }
+
+      const playerId = document.getElementById('league-player-select').value;
+      const points = parseInt(document.getElementById('league-points').value) || 0;
+      const finish = parseInt(document.getElementById('league-finish').value) || null;
+
+      if (!playerId) { alert('נא לבחור שחקן'); return; }
+
+      try {
+        // Check if standing exists
+        const { data: existing } = await db.from('league_standings')
+          .select('*')
+          .eq('league_id', activeLeague.id)
+          .eq('player_id', playerId)
+          .single();
+
+        if (existing) {
+          const update = {
+            points: (existing.points || 0) + points,
+            tournaments_played: (existing.tournaments_played || 0) + 1
+          };
+          if (finish && (!existing.best_finish || finish < existing.best_finish)) {
+            update.best_finish = finish;
+          }
+          const { error } = await db.from('league_standings').update(update).eq('id', existing.id);
+          if (error) throw error;
+        } else {
+          const { error } = await db.from('league_standings').insert({
+            league_id: activeLeague.id,
+            player_id: playerId,
+            points: points,
+            tournaments_played: 1,
+            best_finish: finish
+          });
+          if (error) throw error;
+        }
+
+        // Reset form
+        document.getElementById('league-player-select').value = '';
+        document.getElementById('league-points').value = '0';
+        document.getElementById('league-finish').value = '';
+
+        alert('נקודות עודכנו!');
+        await loadStandings();
+      } catch (err) {
+        console.error('Error updating points:', err);
+        alert('שגיאה בעדכון נקודות: ' + (err.message || err));
+      }
+    }
+
+    async function recalculateStandings() {
+      if (!activeLeague) return;
+      // Re-sort and reload
+      alert('דירוגים חושבו מחדש');
+      await loadStandings();
+    }
+
+    function openEditModal(id, name, points, tp, bf) {
+      document.getElementById('edit-id').value = id;
+      document.getElementById('edit-player-name').value = name;
+      document.getElementById('edit-points').value = points;
+      document.getElementById('edit-tournaments').value = tp;
+      document.getElementById('edit-best').value = bf || '';
+      document.getElementById('edit-modal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').classList.remove('active');
+    }
+
+    async function saveEdit() {
+      const id = document.getElementById('edit-id').value;
+      const points = parseInt(document.getElementById('edit-points').value) || 0;
+      const tp = parseInt(document.getElementById('edit-tournaments').value) || 0;
+      const bf = parseInt(document.getElementById('edit-best').value) || null;
+
+      try {
+        const { error } = await db.from('league_standings').update({
+          points, tournaments_played: tp, best_finish: bf
+        }).eq('id', id);
+
+        if (error) throw error;
+
+        closeEditModal();
+        await loadStandings();
+      } catch (err) {
+        console.error('Error saving edit:', err);
+        alert('שגיאה בשמירה: ' + (err.message || err));
+      }
+    }
+
+    async function deleteStanding(id) {
+      if (!confirm('למחוק את הרשומה?')) return;
+      try {
+        const { error } = await db.from('league_standings').delete().eq('id', id);
+        if (error) throw error;
+        await loadStandings();
+      } catch (err) {
+        console.error('Error deleting standing:', err);
+        alert('שגיאה במחיקה: ' + (err.message || err));
+      }
+    }
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>

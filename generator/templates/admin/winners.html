@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ניהול זוכים — {{VENUE_NAME}}</title>
+  <link rel="icon" href="../images/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_HEBREW_URL}}:wght@300;400;600;700;800&family={{FONT_MONO_URL}}:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <nav class="admin-sidebar">
+      <div style="padding:12px 20px;margin-bottom:12px;border-bottom:1px solid var(--border)">
+        <strong style="font-size:14px">{{VENUE_NAME}}</strong>
+        <div class="text-muted" style="font-size:12px">ניהול</div>
+      </div>
+      <a href="index.html">📊 דשבורד</a>
+      <a href="tournaments.html">🎯 טורנירים</a>
+      <a href="players.html">👥 שחקנים</a>
+      {{#if league}}<a href="leagues.html">🏆 ליגה</a>{{/if}}
+      {{#if winners}}<a href="winners.html" class="active">🥇 זוכים</a>{{/if}}
+      {{#if gallery}}<a href="gallery.html">📸 גלריה</a>{{/if}}
+      {{#if notifications}}<a href="notifications.html">🔔 התראות</a>{{/if}}
+      <a href="../index.html">← חזרה לאתר</a>
+    </nav>
+
+    <main class="admin-content">
+      <div class="flex-between" style="margin-bottom:24px">
+        <div>
+          <h1 style="margin-bottom:4px">ניהול זוכים</h1>
+          <p class="text-muted" style="font-size:13px">הוספה וניהול זוכי טורנירים</p>
+        </div>
+        <button class="btn btn-primary" onclick="openWinnerModal()">+ הוסף זוכה</button>
+      </div>
+
+      <!-- Winners List -->
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>תמונה</th>
+              <th>שחקן</th>
+              <th>טורניר</th>
+              <th>מיקום</th>
+              <th>פרס</th>
+              <th>תאריך</th>
+              <th>פעולות</th>
+            </tr>
+          </thead>
+          <tbody id="winners-body">
+            <tr><td colspan="7" class="text-center text-muted" style="padding:24px">טוען...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Winner Modal -->
+  <div class="modal-overlay" id="winner-modal">
+    <div class="modal">
+      <div class="modal-title" id="winner-modal-title">הוספת זוכה</div>
+      <input type="hidden" id="w-id">
+      <div class="form-group">
+        <label class="form-label">טורניר *</label>
+        <select class="form-select" id="w-tournament">
+          <option value="">בחר טורניר...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">שם שחקן *</label>
+        <input type="text" class="form-input" id="w-player-name" placeholder="שם מלא">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">מיקום</label>
+          <input type="number" class="form-input" id="w-position" value="1" min="1" dir="ltr">
+        </div>
+        <div class="form-group">
+          <label class="form-label">סכום פרס ({{CURRENCY}})</label>
+          <input type="number" class="form-input" id="w-prize" placeholder="0" dir="ltr">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">תמונת הזוכה</label>
+        <div style="border:2px dashed var(--border);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer"
+             onclick="document.getElementById('w-photo-input').click()">
+          <div style="font-size:24px;margin-bottom:8px">📷</div>
+          <div style="font-size:13px;color:var(--text-secondary)">לחץ לבחירת תמונה</div>
+          <div style="font-size:11px;color:var(--text-muted)">JPG, PNG — עד 5MB</div>
+          <input type="file" id="w-photo-input" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+        </div>
+        <div id="w-photo-preview" style="margin-top:8px"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn btn-primary" onclick="saveWinner()">שמור</button>
+        <button class="btn btn-secondary" onclick="closeWinnerModal()">ביטול</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+
+  <script>
+    (async function() {
+      // Auth check
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) { location.href = '../login.html'; return; }
+
+      await loadTournamentOptions();
+      await loadWinners();
+    })();
+
+    async function loadTournamentOptions() {
+      try {
+        const { data } = await db.from('tournaments')
+          .select('id, title, date')
+          .order('date', { ascending: false })
+          .limit(50);
+
+        const select = document.getElementById('w-tournament');
+        if (data) {
+          data.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = (t.title || 'טורניר') + ' — ' + new Date(t.date).toLocaleDateString('he-IL');
+            select.appendChild(opt);
+          });
+        }
+      } catch (err) {
+        console.error('Error loading tournaments:', err);
+      }
+    }
+
+    async function loadWinners() {
+      try {
+        const { data, error } = await db.from('winners')
+          .select('*, tournaments(title, date)')
+          .order('created_at', { ascending: false });
+
+        const tbody = document.getElementById('winners-body');
+
+        if (error || !data || data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:24px">אין זוכים עדיין</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.map(w => {
+          const photoUrl = w.photo_url
+            ? `<img src="${w.photo_url}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`
+            : '<div style="width:40px;height:40px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px">🏆</div>';
+
+          return `
+            <tr>
+              <td>${photoUrl}</td>
+              <td style="font-weight:600">${w.player_name || '-'}</td>
+              <td>${w.tournaments?.title || '-'}</td>
+              <td>
+                <span class="badge ${w.position === 1 ? 'badge-gold' : 'badge-muted'}">
+                  ${w.position ? '#' + w.position : '-'}
+                </span>
+              </td>
+              <td style="font-family:var(--font-mono);font-weight:700;color:var(--primary)">
+                ${w.prize_amount ? '{{CURRENCY}}' + w.prize_amount.toLocaleString() : '-'}
+              </td>
+              <td class="text-muted" style="font-size:12px">
+                ${w.tournaments?.date ? new Date(w.tournaments.date).toLocaleDateString('he-IL') : '-'}
+              </td>
+              <td>
+                <button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;color:#ef4444"
+                  onclick="deleteWinner('${w.id}', '${w.photo_path || ''}')">
+                  מחק
+                </button>
+              </td>
+            </tr>`;
+        }).join('');
+      } catch (err) {
+        console.error('Error loading winners:', err);
+        document.getElementById('winners-body').innerHTML =
+          '<tr><td colspan="7" class="text-center text-muted" style="padding:24px">שגיאה בטעינה</td></tr>';
+      }
+    }
+
+    function previewPhoto(input) {
+      const preview = document.getElementById('w-photo-preview');
+      if (input.files && input.files[0]) {
+        if (input.files[0].size > 5 * 1024 * 1024) {
+          alert('הקובץ גדול מ-5MB');
+          input.value = '';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.innerHTML = `<img src="${e.target.result}" style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius-sm)">`;
+        };
+        reader.readAsDataURL(input.files[0]);
+      } else {
+        preview.innerHTML = '';
+      }
+    }
+
+    function openWinnerModal() {
+      document.getElementById('w-id').value = '';
+      document.getElementById('w-tournament').value = '';
+      document.getElementById('w-player-name').value = '';
+      document.getElementById('w-position').value = '1';
+      document.getElementById('w-prize').value = '';
+      document.getElementById('w-photo-input').value = '';
+      document.getElementById('w-photo-preview').innerHTML = '';
+      document.getElementById('winner-modal-title').textContent = 'הוספת זוכה';
+      document.getElementById('winner-modal').classList.add('active');
+    }
+
+    function closeWinnerModal() {
+      document.getElementById('winner-modal').classList.remove('active');
+    }
+
+    async function saveWinner() {
+      const tournamentId = document.getElementById('w-tournament').value;
+      const playerName = document.getElementById('w-player-name').value.trim();
+      const position = parseInt(document.getElementById('w-position').value) || 1;
+      const prize = parseInt(document.getElementById('w-prize').value) || 0;
+      const fileInput = document.getElementById('w-photo-input');
+
+      if (!tournamentId || !playerName) {
+        alert('נא למלא טורניר ושם שחקן');
+        return;
+      }
+
+      try {
+        let photoUrl = null;
+        let photoPath = null;
+
+        // Upload photo if provided
+        if (fileInput.files && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          const ext = file.name.split('.').pop();
+          const fileName = `winner_${Date.now()}.${ext}`;
+          photoPath = fileName;
+
+          const { data: uploadData, error: uploadError } = await db.storage
+            .from('{{BUCKET_WINNERS}}')
+            .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+          if (uploadError) throw uploadError;
+
+          const { data: urlData } = db.storage
+            .from('{{BUCKET_WINNERS}}')
+            .getPublicUrl(fileName);
+
+          photoUrl = urlData.publicUrl;
+        }
+
+        const { error } = await db.from('winners').insert({
+          tournament_id: tournamentId,
+          player_name: playerName,
+          position: position,
+          prize_amount: prize,
+          photo_url: photoUrl,
+          photo_path: photoPath
+        });
+
+        if (error) throw error;
+
+        closeWinnerModal();
+        alert('זוכה נוסף בהצלחה!');
+        await loadWinners();
+      } catch (err) {
+        console.error('Error saving winner:', err);
+        alert('שגיאה בשמירה: ' + (err.message || err));
+      }
+    }
+
+    async function deleteWinner(id, photoPath) {
+      if (!confirm('למחוק את הזוכה?')) return;
+
+      try {
+        // Delete photo from storage
+        if (photoPath) {
+          await db.storage.from('{{BUCKET_WINNERS}}').remove([photoPath]);
+        }
+
+        const { error } = await db.from('winners').delete().eq('id', id);
+        if (error) throw error;
+
+        await loadWinners();
+      } catch (err) {
+        console.error('Error deleting winner:', err);
+        alert('שגיאה במחיקה: ' + (err.message || err));
+      }
+    }
+  </script>
+
+  {{#if cookie_consent}}<cookie-consent></cookie-consent>{{/if}}
+</body>
+</html>
