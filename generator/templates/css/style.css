@@ -292,3 +292,659 @@ img { max-width: 100%; height: auto; }
 .flex { display: flex; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 .hidden { display: none !important; }
+
+/* =====================================================
+   PREMIUM STYLES — VenueKit ₪5,900 Tier
+   Animations, effects, micro-interactions & polish
+===================================================== */
+
+/* ── 1. Hero Section Upgrade ── */
+
+@keyframes heroGradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(var(--primary-rgb, 232,34,58), .10) 0%, transparent 40%, rgba(var(--secondary-rgb, 232,184,41), .06) 100%);
+  background-size: 200% 200%;
+  animation: heroGradientShift 12s ease infinite;
+}
+
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 30%, rgba(var(--primary-rgb, 232,34,58), .06) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 80% 70%, rgba(var(--secondary-rgb, 232,184,41), .04) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+.hero > * { position: relative; z-index: 1; }
+
+/* Floating decorative particles */
+@keyframes floatUp {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: .15; }
+  90%  { opacity: .15; }
+  100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+}
+
+.hero::after {
+  content: '\2660 \2665 \2666 \2663';
+  position: absolute; bottom: -20px; left: 50%;
+  font-size: 24px; letter-spacing: 60px;
+  color: var(--primary);
+  opacity: 0;
+  animation: floatUp 18s linear infinite;
+  pointer-events: none; z-index: 0;
+}
+
+/* Text glow on venue name */
+.hero h1 {
+  text-shadow: 0 0 30px rgba(var(--primary-rgb, 232,34,58), .25),
+               0 0 60px rgba(var(--primary-rgb, 232,34,58), .10);
+}
+
+/* Pulsing CTA button */
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb, 232,34,58), .4); }
+  50%      { box-shadow: 0 0 0 12px rgba(var(--primary-rgb, 232,34,58), 0); }
+}
+
+.hero .btn-primary {
+  animation: ctaPulse 2.5s ease infinite;
+}
+
+/* ── 2. Card Enhancements ── */
+
+@keyframes cardFadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  animation: cardFadeIn .5s ease backwards;
+}
+
+/* Staggered delays for grid children */
+.grid .card:nth-child(1)  { animation-delay: .05s; }
+.grid .card:nth-child(2)  { animation-delay: .10s; }
+.grid .card:nth-child(3)  { animation-delay: .15s; }
+.grid .card:nth-child(4)  { animation-delay: .20s; }
+.grid .card:nth-child(5)  { animation-delay: .25s; }
+.grid .card:nth-child(6)  { animation-delay: .30s; }
+.grid .card:nth-child(7)  { animation-delay: .35s; }
+.grid .card:nth-child(8)  { animation-delay: .40s; }
+.grid .card:nth-child(9)  { animation-delay: .45s; }
+.grid .card:nth-child(10) { animation-delay: .50s; }
+.grid .card:nth-child(11) { animation-delay: .55s; }
+.grid .card:nth-child(12) { animation-delay: .60s; }
+
+/* Gradient border glow on hover */
+.card:hover {
+  border-color: transparent;
+  background-image: linear-gradient(var(--bg-card), var(--bg-card)),
+                    linear-gradient(135deg, var(--primary), var(--secondary));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: var(--shadow), 0 0 20px rgba(var(--primary-rgb, 232,34,58), .10);
+}
+
+/* ── 3. Tournament Card Premium ── */
+
+.tournament-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Status badge — top-right corner */
+.tournament-card .badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+}
+
+/* Registration progress bar with gradient */
+.tournament-card .progress-fill {
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+
+/* "Almost full" glow when >80% */
+.tournament-card.almost-full .progress-bar {
+  box-shadow: 0 0 10px rgba(var(--primary-rgb, 232,34,58), .35);
+}
+
+.tournament-card.almost-full .progress-fill {
+  animation: pulse 1.5s ease infinite;
+}
+
+/* Glow effect on tournament cards */
+@keyframes tournamentGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(var(--primary-rgb, 232,34,58), .08); }
+  50%      { box-shadow: 0 0 20px rgba(var(--primary-rgb, 232,34,58), .18); }
+}
+
+.tournament-card:hover {
+  animation: tournamentGlow 2s ease infinite;
+}
+
+/* ── 4. Winners / Podium Section ── */
+
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px 20px;
+}
+
+.podium-place {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 16px;
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: all .3s;
+  min-width: 120px;
+}
+
+/* 1st place — tallest, gold */
+.podium-place.first {
+  order: 2;
+  min-height: 220px;
+  border-color: #E8B829;
+  background: linear-gradient(180deg, rgba(232,184,41,.12) 0%, var(--bg-card) 60%);
+  box-shadow: 0 0 30px rgba(232,184,41,.15);
+  transform: scale(1.05);
+}
+
+/* 2nd place — silver */
+.podium-place.second {
+  order: 1;
+  min-height: 180px;
+  border-color: #a8b4c0;
+  background: linear-gradient(180deg, rgba(168,180,192,.10) 0%, var(--bg-card) 60%);
+  box-shadow: 0 0 20px rgba(168,180,192,.08);
+}
+
+/* 3rd place — bronze */
+.podium-place.third {
+  order: 3;
+  min-height: 160px;
+  border-color: #cd7f32;
+  background: linear-gradient(180deg, rgba(205,127,50,.10) 0%, var(--bg-card) 60%);
+  box-shadow: 0 0 20px rgba(205,127,50,.08);
+}
+
+/* Winner photo frame with glow */
+.podium-photo {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 3px solid var(--border);
+}
+
+.podium-place.first .podium-photo {
+  width: 80px; height: 80px;
+  border-color: #E8B829;
+  box-shadow: 0 0 18px rgba(232,184,41,.35);
+}
+
+.podium-place.second .podium-photo {
+  border-color: #a8b4c0;
+  box-shadow: 0 0 12px rgba(168,180,192,.25);
+}
+
+.podium-place.third .podium-photo {
+  border-color: #cd7f32;
+  box-shadow: 0 0 12px rgba(205,127,50,.25);
+}
+
+.podium-rank {
+  font-size: 28px; font-weight: 800;
+  font-family: var(--font-mono);
+  margin-bottom: 4px;
+}
+
+.podium-place.first  .podium-rank { color: #E8B829; }
+.podium-place.second .podium-rank { color: #a8b4c0; }
+.podium-place.third  .podium-rank { color: #cd7f32; }
+
+.podium-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.podium-prize { font-size: 13px; color: var(--text-secondary); }
+
+/* ── 5. Gallery Enhancements ── */
+
+/* Masonry-style grid option */
+.gallery-masonry {
+  columns: 3;
+  column-gap: 8px;
+}
+
+.gallery-masonry .gallery-item {
+  break-inside: avoid;
+  margin-bottom: 8px;
+  aspect-ratio: auto;
+}
+
+/* Hover zoom with overlay caption */
+.gallery-item {
+  position: relative;
+}
+
+.gallery-item::after {
+  content: attr(data-caption);
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 10px;
+  background: linear-gradient(transparent, rgba(0,0,0,.75));
+  color: white; font-size: 12px; font-weight: 600;
+  opacity: 0; transform: translateY(6px);
+  transition: all .3s;
+}
+
+.gallery-item:hover::after {
+  opacity: 1; transform: translateY(0);
+}
+
+.gallery-item:hover img {
+  transform: scale(1.08);
+}
+
+/* Lightbox backdrop blur */
+.lightbox {
+  backdrop-filter: blur(16px);
+  background: rgba(0,0,0,.85);
+}
+
+@media (max-width: 768px) {
+  .gallery-masonry { columns: 2; }
+}
+
+/* ── 6. Timer Page Styles ── */
+
+.timer-fullscreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: var(--bg-dark);
+}
+
+.timer-clock {
+  font-family: var(--font-mono);
+  font-size: clamp(64px, 15vw, 160px);
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--text-primary);
+  text-shadow: 0 0 40px rgba(var(--primary-rgb, 232,34,58), .20);
+  line-height: 1;
+  margin-bottom: 20px;
+}
+
+.timer-level-label {
+  font-size: clamp(18px, 3vw, 28px);
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.timer-blinds {
+  font-family: var(--font-mono);
+  font-size: clamp(24px, 5vw, 48px);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+/* Level progress bar */
+.timer-progress {
+  width: 80%; max-width: 600px;
+  height: 8px; border-radius: 4px;
+  background: var(--border);
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.timer-progress-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transition: width 1s linear;
+}
+
+/* Break mode */
+.timer-fullscreen.break-mode {
+  background: linear-gradient(135deg, #0a1a12 0%, var(--bg-dark) 100%);
+}
+
+.timer-fullscreen.break-mode .timer-clock {
+  color: #22c55e;
+  text-shadow: 0 0 40px rgba(34,197,94,.25);
+}
+
+.timer-fullscreen.break-mode .timer-level-label {
+  color: #22c55e;
+}
+
+/* Blinds display table */
+.blinds-table {
+  width: 100%; max-width: 700px;
+  border-collapse: collapse;
+  margin: 20px auto;
+}
+
+.blinds-table th {
+  text-align: right;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  border-bottom: 2px solid var(--border);
+}
+
+.blinds-table td {
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: var(--font-mono);
+  border-bottom: 1px solid var(--border);
+}
+
+.blinds-table tr.current-level {
+  background: rgba(var(--primary-rgb, 232,34,58), .10);
+}
+
+.blinds-table tr.current-level td {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.blinds-table tr.break-level td {
+  color: #22c55e;
+  font-style: italic;
+}
+
+/* ── 7. Navigation Upgrades ── */
+
+/* Active link underline animation */
+.navbar-links a {
+  position: relative;
+}
+
+.navbar-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%; right: 50%;
+  height: 2px;
+  background: var(--primary);
+  transition: all .3s ease;
+  border-radius: 1px;
+}
+
+.navbar-links a:hover::after,
+.navbar-links a.active::after {
+  left: 8px; right: 8px;
+}
+
+/* Hamburger menu button */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none; border: none;
+  cursor: pointer; padding: 4px;
+}
+
+.menu-toggle span {
+  display: block;
+  width: 22px; height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all .3s;
+}
+
+.menu-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.menu-toggle.open span:nth-child(2) { opacity: 0; }
+.menu-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Scroll-triggered navbar */
+.navbar.scrolled {
+  background: rgba(13,15,20,.98);
+  box-shadow: 0 2px 16px rgba(0,0,0,.4);
+}
+
+@media (max-width: 768px) {
+  .menu-toggle { display: flex; }
+}
+
+/* ── 8. Loading & Skeleton States ── */
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--bg-card) 25%,
+    rgba(255,255,255,.06) 37%,
+    var(--bg-card) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease infinite;
+  border-radius: var(--radius-sm);
+  color: transparent !important;
+}
+
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.skeleton-text.short { width: 40%; }
+.skeleton-text.medium { width: 65%; }
+
+.skeleton-card {
+  height: 160px;
+  border-radius: var(--radius);
+}
+
+.skeleton-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+}
+
+/* Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+.spinner-sm { width: 18px; height: 18px; border-width: 2px; }
+.spinner-lg { width: 48px; height: 48px; border-width: 4px; }
+
+/* ── 9. Micro-interactions ── */
+
+/* Button press scale */
+.btn:active {
+  transform: scale(.96);
+}
+
+.btn-primary:active {
+  transform: scale(.96) translateY(0);
+}
+
+/* Input focus glow */
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb, 232,34,58), .15);
+}
+
+/* Link hover transitions */
+a { transition: color .2s, opacity .2s; }
+
+/* Toast slide-in animation */
+@keyframes toastSlideIn {
+  from { transform: translateX(-50%) translateY(40px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+.toast.show {
+  animation: toastSlideIn .35s ease forwards;
+}
+
+/* Smooth tab transition */
+.tab {
+  transition: all .25s ease;
+}
+
+.tab:hover:not(.active) {
+  background: rgba(255,255,255,.04);
+  color: var(--text-secondary);
+}
+
+/* Stat card hover lift */
+.stat-card {
+  transition: all .25s;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow);
+}
+
+/* Badge subtle scale on hover */
+.badge {
+  transition: transform .2s;
+}
+
+.badge:hover {
+  transform: scale(1.05);
+}
+
+/* ── 10. Premium Utilities ── */
+
+/* Gold gradient text */
+.gold-text {
+  background: linear-gradient(135deg, #E8B829 0%, #F5D75A 40%, #E8B829 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass card with frosted effect */
+.glass-card {
+  background: rgba(255,255,255,.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+}
+
+/* Glow animation */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(var(--primary-rgb, 232,34,58), .15); }
+  50%      { box-shadow: 0 0 24px rgba(var(--primary-rgb, 232,34,58), .30); }
+}
+
+.glow {
+  animation: glowPulse 2.5s ease infinite;
+}
+
+.glow-gold {
+  animation: glowPulse 2.5s ease infinite;
+  --primary-rgb: 232,184,41;
+}
+
+/* Noise texture overlay */
+.noise-bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    135deg, transparent, transparent 2px,
+    rgba(255,255,255,.005) 2px, rgba(255,255,255,.005) 4px
+  );
+  pointer-events: none; z-index: 0;
+}
+
+/* Gradient divider line */
+.divider-gradient {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+  border: none;
+  margin: 24px 0;
+}
+
+/* Chip / tag style */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  background: rgba(255,255,255,.06);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  transition: all .2s;
+}
+
+.chip:hover {
+  background: rgba(255,255,255,.10);
+  border-color: var(--border-accent);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-accent); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Selection color */
+::selection {
+  background: rgba(var(--primary-rgb, 232,34,58), .25);
+  color: var(--text-primary);
+}
+
+/* Visually hidden (accessible) */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* Premium section decorator — poker suit */
+.section-title.decorated::before {
+  content: '\2660';
+  color: var(--primary);
+  font-size: 1.1em;
+  filter: drop-shadow(0 0 6px rgba(var(--primary-rgb, 232,34,58), .5));
+  margin-left: 8px;
+}
+
+/* Container max-width override */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; position: relative; z-index: 1; }
+
+/* ── Responsive Premium ── */
+@media (max-width: 768px) {
+  .podium { flex-direction: column; align-items: center; }
+  .podium-place.first  { order: 1; transform: none; }
+  .podium-place.second { order: 2; }
+  .podium-place.third  { order: 3; }
+  .timer-clock { letter-spacing: 2px; }
+}
