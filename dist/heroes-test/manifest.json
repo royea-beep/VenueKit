@@ -1,0 +1,14 @@
+{
+  "name": "הירוס בחדרה",
+  "short_name": "Heroes Hadera",
+  "description": "טורנירי פוקר לייב",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0D0F14",
+  "theme_color": "#E8223A",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "images/logo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "images/logo.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
