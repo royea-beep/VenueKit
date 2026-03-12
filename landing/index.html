@@ -123,98 +123,76 @@
     </div>
   </section>
 
-  <!-- Pricing Calculator -->
+  <!-- Pricing Tiers -->
   <section id="pricing" class="vk-section vk-section-dark">
-    <h2 class="vk-section-title">בחר את הפיצ'רים שלך</h2>
-    <p class="vk-section-sub">סמן מה שאתה צריך — המחיר מתעדכן בזמן אמת</p>
+    <h2 class="vk-section-title">בחר את החבילה שלך</h2>
+    <p class="vk-section-sub">תשלום חד-פעמי · ללא עלויות נסתרות · מוכן תוך 48 שעות</p>
 
-    <div class="vk-pricing-layout">
-      <div class="vk-picker">
-        <div class="vk-picker-base">
-          <div class="vk-picker-item vk-picker-locked">
-            <div class="vk-picker-info">
-              <strong>🎯 חבילת בסיס</strong>
-              <span>טורנירים + שחקנים + פאנל ניהול + התחברות</span>
-            </div>
-            <div class="vk-picker-price">₪2,500</div>
-          </div>
-        </div>
-
-        <div class="vk-picker-label">הוסף פיצ'רים:</div>
-
-        <label class="vk-picker-item" data-feature="league" data-price="800">
-          <input type="checkbox" class="vk-check" data-price="800">
-          <div class="vk-picker-info"><strong>🏆 מערכת ליגה</strong><span>דירוג, נקודות, עונות</span></div>
-          <div class="vk-picker-price">+₪800</div>
-        </label>
-
-        <label class="vk-picker-item" data-feature="gallery" data-price="500">
-          <input type="checkbox" class="vk-check" data-price="500">
-          <div class="vk-picker-info"><strong>📸 גלריית תמונות</strong><span>תמונות, lightbox, סינון</span></div>
-          <div class="vk-picker-price">+₪500</div>
-        </label>
-
-        <label class="vk-picker-item" data-feature="winners" data-price="500">
-          <input type="checkbox" class="vk-check" data-price="500">
-          <div class="vk-picker-info"><strong>🥇 גלריית זוכים</strong><span>מדליות, פרסים, תמונות</span></div>
-          <div class="vk-picker-price">+₪500</div>
-        </label>
-
-        <label class="vk-picker-item" data-feature="timer" data-price="400">
-          <input type="checkbox" class="vk-check" data-price="400">
-          <div class="vk-picker-info"><strong>⏱️ טיימר חי</strong><span>בליינדים, הפסקות, סאונד</span></div>
-          <div class="vk-picker-price">+₪400</div>
-        </label>
-
-        <label class="vk-picker-item" data-feature="profile" data-price="600">
-          <input type="checkbox" class="vk-check" data-price="600">
-          <div class="vk-picker-info"><strong>👤 פרופיל שחקן</strong><span>עמוד אישי, סטטיסטיקות</span></div>
-          <div class="vk-picker-price">+₪600</div>
-        </label>
-
-        <label class="vk-picker-item" data-feature="notifications" data-price="700">
-          <input type="checkbox" class="vk-check" data-price="700">
-          <div class="vk-picker-info"><strong>🔔 התראות Push</strong><span>תזכורות, עדכונים</span></div>
-          <div class="vk-picker-price">+₪700</div>
-        </label>
-
-        <label class="vk-picker-item" data-feature="whatsapp" data-price="400">
-          <input type="checkbox" class="vk-check" data-price="400">
-          <div class="vk-picker-info"><strong>💬 WhatsApp שיתוף</strong><span>תבניות הודעות</span></div>
-          <div class="vk-picker-price">+₪400</div>
-        </label>
-
-        <label class="vk-picker-item" data-feature="pwa" data-price="300">
-          <input type="checkbox" class="vk-check" data-price="300">
-          <div class="vk-picker-info"><strong>📱 אפליקציה PWA</strong><span>התקנה, אופליין</span></div>
-          <div class="vk-picker-price">+₪300</div>
-        </label>
-
-        <label class="vk-picker-item" data-feature="branding" data-price="500">
-          <input type="checkbox" class="vk-check" data-price="500">
-          <div class="vk-picker-info"><strong>🎨 מיתוג מותאם</strong><span>צבעים, לוגו, עיצוב</span></div>
-          <div class="vk-picker-price">+₪500</div>
-        </label>
-
-        <label class="vk-picker-item" data-feature="csv" data-price="200">
-          <input type="checkbox" class="vk-check" data-price="200">
-          <div class="vk-picker-info"><strong>📊 ייצוא CSV</strong><span>ייצוא נתוני שחקנים</span></div>
-          <div class="vk-picker-price">+₪200</div>
-        </label>
-
-        <div class="vk-select-all">
-          <button class="vk-btn vk-btn-ghost vk-btn-sm" onclick="selectAll()">בחר הכל (חבילה מלאה)</button>
-          <button class="vk-btn vk-btn-ghost vk-btn-sm" onclick="clearAll()">נקה הכל</button>
-        </div>
+    <div class="vk-tiers">
+      <!-- Starter -->
+      <div class="vk-tier-card">
+        <div class="vk-tier-name">Starter</div>
+        <div class="vk-tier-price">₪2,500</div>
+        <div class="vk-tier-desc">חד-פעמי</div>
+        <ul class="vk-tier-features">
+          <li class="vk-feat-yes">🎯 ניהול טורנירים</li>
+          <li class="vk-feat-yes">👥 ניהול שחקנים</li>
+          <li class="vk-feat-yes">🛡️ פאנל ניהול</li>
+          <li class="vk-feat-yes">🔐 מערכת התחברות</li>
+          <li class="vk-feat-no">🏆 מערכת ליגה</li>
+          <li class="vk-feat-no">📸 גלריות</li>
+          <li class="vk-feat-no">⏱️ טיימר חי</li>
+          <li class="vk-feat-no">🔔 התראות Push</li>
+          <li class="vk-feat-no">📱 PWA</li>
+          <li class="vk-feat-no">🎨 מיתוג מותאם</li>
+        </ul>
+        <a href="#" class="vk-btn vk-btn-ghost vk-btn-full vk-order-btn" data-plan="Starter" data-price="2,500" onclick="orderPlan(event)">הזמן Starter ←</a>
       </div>
 
-      <div class="vk-total-card">
-        <div class="vk-total-label">סה״כ</div>
-        <div class="vk-total-price" id="total-price">₪2,500</div>
-        <div class="vk-total-breakdown" id="total-breakdown">חבילת בסיס</div>
-        <div class="vk-total-save" id="total-save"></div>
-        <a href="#contact" class="vk-btn vk-btn-primary vk-btn-full">הזמן עכשיו ←</a>
-        <p class="vk-total-note">מוכן תוך 48 שעות · תמיכה מלאה · ללא עלויות נסתרות</p>
+      <!-- Pro — recommended -->
+      <div class="vk-tier-card vk-tier-popular">
+        <div class="vk-tier-badge">הכי פופולרי</div>
+        <div class="vk-tier-name">Pro</div>
+        <div class="vk-tier-price">₪3,900</div>
+        <div class="vk-tier-desc">חד-פעמי</div>
+        <ul class="vk-tier-features">
+          <li class="vk-feat-yes">🎯 ניהול טורנירים</li>
+          <li class="vk-feat-yes">👥 ניהול שחקנים</li>
+          <li class="vk-feat-yes">🛡️ פאנל ניהול</li>
+          <li class="vk-feat-yes">🔐 מערכת התחברות</li>
+          <li class="vk-feat-yes">🏆 מערכת ליגה</li>
+          <li class="vk-feat-yes">📸 גלריות (תמונות + זוכים)</li>
+          <li class="vk-feat-yes">⏱️ טיימר חי</li>
+          <li class="vk-feat-yes">👤 פרופיל שחקן</li>
+          <li class="vk-feat-no">🔔 התראות Push</li>
+          <li class="vk-feat-no">📱 PWA</li>
+          <li class="vk-feat-no">🎨 מיתוג מותאם</li>
+        </ul>
+        <a href="#" class="vk-btn vk-btn-primary vk-btn-full vk-order-btn" data-plan="Pro" data-price="3,900" onclick="orderPlan(event)">הזמן Pro ←</a>
+      </div>
+
+      <!-- Full -->
+      <div class="vk-tier-card">
+        <div class="vk-tier-badge vk-tier-badge-gold">הכל כלול</div>
+        <div class="vk-tier-name">Full</div>
+        <div class="vk-tier-price">₪5,900</div>
+        <div class="vk-tier-desc">חד-פעמי · חיסכון ₪1,200</div>
+        <ul class="vk-tier-features">
+          <li class="vk-feat-yes">🎯 ניהול טורנירים</li>
+          <li class="vk-feat-yes">👥 ניהול שחקנים</li>
+          <li class="vk-feat-yes">🛡️ פאנל ניהול</li>
+          <li class="vk-feat-yes">🔐 מערכת התחברות</li>
+          <li class="vk-feat-yes">🏆 מערכת ליגה</li>
+          <li class="vk-feat-yes">📸 גלריות (תמונות + זוכים)</li>
+          <li class="vk-feat-yes">⏱️ טיימר חי</li>
+          <li class="vk-feat-yes">👤 פרופיל שחקן</li>
+          <li class="vk-feat-yes">🔔 התראות Push</li>
+          <li class="vk-feat-yes">💬 WhatsApp שיתוף</li>
+          <li class="vk-feat-yes">📱 אפליקציה PWA</li>
+          <li class="vk-feat-yes">🎨 מיתוג מותאם</li>
+          <li class="vk-feat-yes">📊 ייצוא CSV</li>
+        </ul>
+        <a href="#" class="vk-btn vk-btn-primary vk-btn-full vk-order-btn" data-plan="Full" data-price="5,900" onclick="orderPlan(event)">הזמן Full ←</a>
       </div>
     </div>
   </section>
