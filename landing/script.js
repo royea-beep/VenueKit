@@ -22,7 +22,7 @@ const PAYPLUS_LINKS = {
   Full:    '', // paste Payplus link for ₪5,900
 };
 
-const WHATSAPP_NUMBER = '9720523227765';
+const WHATSAPP_NUMBER = '972523227765';
 
 // ── Order handler ──
 function orderPlan(e) {
