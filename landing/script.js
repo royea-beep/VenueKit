@@ -134,6 +134,6 @@ const observer = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.1 });
 
-document.querySelectorAll('.vk-feature-card, .vk-faq-item, .vk-tier-card').forEach(el => {
+document.querySelectorAll('.vk-feature-card, .vk-faq-item, .vk-tier-card, .vk-step, .vk-testimonial-card').forEach(el => {
   observer.observe(el);
 });
