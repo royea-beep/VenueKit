@@ -231,6 +231,29 @@ body {
   .vk-total-price { font-size: 36px; }
 }
 
+/* ── Payment Result Overlay ── */
+.vk-payment-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.7); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: vk-fadeIn .3s ease;
+}
+.vk-payment-modal {
+  background: var(--vk-bg-card); border: 1px solid var(--vk-border);
+  border-radius: var(--vk-radius); padding: 48px 32px; text-align: center;
+  max-width: 420px; width: 100%;
+}
+.vk-payment-icon {
+  width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 900;
+}
+.vk-payment-success { background: rgba(34,197,94,.15); color: #22c55e; border: 2px solid #22c55e; }
+.vk-payment-failed  { background: rgba(239,68,68,.15); color: #ef4444; border: 2px solid #ef4444; }
+.vk-payment-modal h2 { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+.vk-payment-modal p  { font-size: 14px; color: var(--vk-text-dim); margin-bottom: 24px; }
+@keyframes vk-fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 /* ── Animations ── */
 .vk-feature-card, .vk-faq-item, .vk-picker-item {
   transition: opacity .4s ease, transform .4s ease, border-color .2s, box-shadow .3s;

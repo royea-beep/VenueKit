@@ -72,17 +72,30 @@ async function main() {
   console.log(`\nPayplus API: ${API_URL}`);
   console.log('Creating VenueKit payment links...\n');
 
+  const results = [];
   for (const pkg of PACKAGES) {
     const result = await createPaymentLink(pkg);
+    results.push(result);
     if (result.error) {
-      console.log(`❌ ${result.name}: ${result.error}`);
+      console.log(`[FAIL] ${result.name}: ${result.error}`);
     } else {
-      console.log(`✅ ${result.name} (₪${result.price})`);
-      console.log(`   ${result.url}\n`);
+      console.log(`[OK]   ${result.name} (ILS ${result.price})`);
+      console.log(`       ${result.url}\n`);
     }
   }
 
-  console.log('\nPaste these URLs into landing/script.js to replace WhatsApp links.');
+  console.log('\n── Copy-paste into landing/script.js PAYPLUS_LINKS ──\n');
+  console.log('const PAYPLUS_LINKS = {');
+  for (let i = 0; i < PACKAGES.length; i++) {
+    const key = PACKAGES[i].name.replace('VenueKit ', '');
+    const r = results[i];
+    if (r.url) {
+      console.log(`  ${key}: '${r.url}',`);
+    } else {
+      console.log(`  ${key}: '', // FAILED: ${r.error}`);
+    }
+  }
+  console.log('};');
 }
 
 main().catch(console.error);
