@@ -1,6 +1,26 @@
 /* =====================================================
-   VenueKit Landing Page — Payplus Payment + interactions
+   VenueKit Landing Page — Supabase CRM + Payplus + interactions
 ===================================================== */
+
+// ── Supabase client (for lead tracking) ──
+const VK_SUPABASE_URL = 'https://uiyqswnhrbfctafeihdh.supabase.co';
+const VK_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpeXFzd25ocmJmY3RhZmVpaGRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MTI5OTAsImV4cCI6MjA4ODM4ODk5MH0.w1YYTGyRlt8MVSEYRjv8tqORfP-aYveVry_xxVYaw0w';
+let vkDb = null;
+try {
+  if (window.supabase) {
+    vkDb = window.supabase.createClient(VK_SUPABASE_URL, VK_SUPABASE_KEY);
+  }
+} catch (e) { console.warn('Supabase init failed:', e); }
+
+/**
+ * Save a lead to Supabase (fire-and-forget, never blocks WhatsApp flow)
+ */
+async function saveLead(leadData) {
+  if (!vkDb) return;
+  try {
+    await vkDb.from('vk_leads').insert([leadData]);
+  } catch (e) { console.warn('Lead save failed:', e); }
+}
 
 /**
  * PAYPLUS PAYMENT LINKS
@@ -31,6 +51,9 @@ function orderPlan(e) {
   const plan = btn.dataset.plan;
   const price = btn.dataset.price;
 
+  // Save lead to Supabase (fire-and-forget)
+  saveLead({ name: 'Order Click', plan, price: '₪' + price, source: 'order_button' });
+
   // If Payplus link exists for this plan, redirect to payment
   if (PAYPLUS_LINKS[plan]) {
     window.location.href = PAYPLUS_LINKS[plan];
@@ -57,6 +80,10 @@ function handleSubmit(e) {
   const venue = data.get('venue');
   const notes = data.get('notes');
 
+  // Save lead to Supabase (fire-and-forget)
+  saveLead({ name, phone, venue_name: venue, notes, source: 'contact_form' });
+
+  // WhatsApp notification
   const msg = encodeURIComponent(
     `פנייה מאתר VenueKit\n\n` +
     `שם: ${name}\n` +
@@ -69,7 +96,7 @@ function handleSubmit(e) {
 
   form.innerHTML = `
     <div style="text-align:center;padding:40px">
-      <div style="font-size:48px;margin-bottom:16px">✓</div>
+      <div style="font-size:48px;margin-bottom:16px">&#10003;</div>
       <h3 style="margin-bottom:8px">ההודעה נשלחה!</h3>
       <p style="color:#94a3b8">נחזור אליכם בהקדם</p>
     </div>

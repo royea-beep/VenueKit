@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VenueKit — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .vk-dash { max-width: 1100px; margin: 0 auto; padding: 80px 20px 60px; }
+    .vk-dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 12px; }
+    .vk-dash-header h1 { font-size: 28px; font-weight: 800; }
+    .vk-dash-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* Stats row */
+    .vk-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+    .vk-stat-card { background: var(--vk-bg-card); border: 1px solid var(--vk-border); border-radius: var(--vk-radius); padding: 20px; text-align: center; }
+    .vk-stat-value { font-size: 32px; font-weight: 900; color: var(--vk-primary); line-height: 1; margin-bottom: 4px; }
+    .vk-stat-label { font-size: 12px; color: var(--vk-text-muted); font-weight: 600; text-transform: uppercase; }
+
+    /* Tabs */
+    .vk-tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--vk-border); padding-bottom: 0; }
+    .vk-tab { padding: 10px 20px; font-size: 14px; font-weight: 700; color: var(--vk-text-dim); cursor: pointer; border: none; background: none; font-family: 'Heebo', sans-serif; border-bottom: 2px solid transparent; transition: all .2s; }
+    .vk-tab:hover { color: var(--vk-text); }
+    .vk-tab.active { color: var(--vk-primary); border-bottom-color: var(--vk-primary); }
+
+    /* Table */
+    .vk-table-wrap { overflow-x: auto; }
+    .vk-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .vk-table th { text-align: right; padding: 10px 12px; color: var(--vk-text-muted); font-weight: 700; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--vk-border); white-space: nowrap; }
+    .vk-table td { padding: 12px; border-bottom: 1px solid var(--vk-border); vertical-align: middle; }
+    .vk-table tr:hover td { background: rgba(255,255,255,.02); }
+
+    /* Status badges */
+    .vk-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .vk-badge-new { background: rgba(59,130,246,.15); color: #3b82f6; }
+    .vk-badge-contacted { background: rgba(234,179,8,.15); color: #eab308; }
+    .vk-badge-in_progress { background: rgba(168,85,247,.15); color: #a855f7; }
+    .vk-badge-closed { background: rgba(34,197,94,.15); color: #22c55e; }
+    .vk-badge-lost { background: rgba(239,68,68,.15); color: #ef4444; }
+    .vk-badge-pending { background: rgba(234,179,8,.15); color: #eab308; }
+    .vk-badge-confirmed { background: rgba(34,197,94,.15); color: #22c55e; }
+    .vk-badge-cancelled { background: rgba(239,68,68,.15); color: #ef4444; }
+
+    /* Status select */
+    .vk-status-select { background: var(--vk-bg-card); border: 1px solid var(--vk-border); color: var(--vk-text); border-radius: 6px; padding: 4px 8px; font-size: 12px; font-family: 'Heebo', sans-serif; cursor: pointer; }
+    .vk-status-select:focus { outline: none; border-color: var(--vk-primary); }
+
+    /* Login overlay */
+    .vk-login-overlay { position: fixed; inset: 0; z-index: 9999; background: var(--vk-bg); display: flex; align-items: center; justify-content: center; }
+    .vk-login-card { background: var(--vk-bg-card); border: 1px solid var(--vk-border); border-radius: var(--vk-radius); padding: 48px 32px; text-align: center; max-width: 380px; width: 100%; }
+    .vk-login-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .vk-login-card p { font-size: 14px; color: var(--vk-text-dim); margin-bottom: 24px; }
+    .vk-login-input { width: 100%; padding: 14px 16px; border-radius: 10px; background: var(--vk-bg); border: 1px solid var(--vk-border); color: var(--vk-text); font-family: 'JetBrains Mono', monospace; font-size: 16px; text-align: center; letter-spacing: 4px; margin-bottom: 16px; }
+    .vk-login-input:focus { outline: none; border-color: var(--vk-primary); }
+    .vk-login-error { color: #ef4444; font-size: 13px; margin-bottom: 12px; display: none; }
+
+    /* Empty state */
+    .vk-empty { text-align: center; padding: 60px 20px; color: var(--vk-text-muted); }
+    .vk-empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .vk-stats { grid-template-columns: repeat(2, 1fr); }
+      .vk-dash { padding: 70px 12px 40px; }
+      .vk-table { font-size: 12px; }
+      .vk-table th, .vk-table td { padding: 8px 6px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="vk-nav">
+    <a href="index.html" class="vk-logo" style="text-decoration:none">VenueKit</a>
+    <div class="vk-nav-links">
+      <a href="index.html">ראשי</a>
+      <a href="booking.html">הזמנת אירוע</a>
+      <a href="#" id="logout-btn" style="display:none" class="vk-btn-nav">התנתק</a>
+    </div>
+  </nav>
+
+  <!-- Login overlay -->
+  <div class="vk-login-overlay" id="login-overlay">
+    <div class="vk-login-card">
+      <h2>VenueKit Dashboard</h2>
+      <p>הכנס סיסמת ניהול כדי להמשיך</p>
+      <div class="vk-login-error" id="login-error">סיסמה שגויה</div>
+      <input type="password" class="vk-login-input" id="password-input" placeholder="****" autofocus>
+      <button class="vk-btn vk-btn-primary vk-btn-full" id="login-btn">כניסה</button>
+    </div>
+  </div>
+
+  <!-- Dashboard (hidden until auth) -->
+  <div class="vk-dash" id="dashboard" style="display:none">
+    <div class="vk-dash-header">
+      <h1>VenueKit Dashboard</h1>
+      <div class="vk-dash-actions">
+        <button class="vk-btn vk-btn-ghost vk-btn-sm" onclick="loadData()">רענן</button>
+        <button class="vk-btn vk-btn-primary vk-btn-sm" onclick="exportCSV()">ייצוא CSV</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="vk-stats">
+      <div class="vk-stat-card">
+        <div class="vk-stat-value" id="stat-leads">0</div>
+        <div class="vk-stat-label">לידים</div>
+      </div>
+      <div class="vk-stat-card">
+        <div class="vk-stat-value" id="stat-new">0</div>
+        <div class="vk-stat-label">חדשים</div>
+      </div>
+      <div class="vk-stat-card">
+        <div class="vk-stat-value" id="stat-bookings">0</div>
+        <div class="vk-stat-label">הזמנות</div>
+      </div>
+      <div class="vk-stat-card">
+        <div class="vk-stat-value" id="stat-pending">0</div>
+        <div class="vk-stat-label">ממתינות</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="vk-tabs">
+      <button class="vk-tab active" data-tab="leads">לידים</button>
+      <button class="vk-tab" data-tab="bookings">הזמנות</button>
+    </div>
+
+    <!-- Leads table -->
+    <div id="tab-leads" class="vk-table-wrap">
+      <table class="vk-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>שם</th>
+            <th>טלפון</th>
+            <th>מועדון</th>
+            <th>חבילה</th>
+            <th>סטטוס</th>
+            <th>תאריך</th>
+          </tr>
+        </thead>
+        <tbody id="leads-body"></tbody>
+      </table>
+      <div class="vk-empty" id="leads-empty" style="display:none">
+        <div class="vk-empty-icon">📋</div>
+        <p>אין לידים עדיין.<br>כשמישהו ישלח פנייה מהאתר, היא תופיע כאן.</p>
+      </div>
+    </div>
+
+    <!-- Bookings table -->
+    <div id="tab-bookings" class="vk-table-wrap" style="display:none">
+      <table class="vk-table">
+        <thead>
+          <tr>
+            <th>מס'</th>
+            <th>אירוע</th>
+            <th>תאריך</th>
+            <th>שם</th>
+            <th>טלפון</th>
+            <th>משתתפים</th>
+            <th>סטטוס</th>
+            <th>נוצר</th>
+          </tr>
+        </thead>
+        <tbody id="bookings-body"></tbody>
+      </table>
+      <div class="vk-empty" id="bookings-empty" style="display:none">
+        <div class="vk-empty-icon">📅</div>
+        <p>אין הזמנות עדיין.<br>כשמישהו ישלח הזמנת אירוע, היא תופיע כאן.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="vk-footer" id="footer" style="display:none">
+    <div class="vk-footer-brand">VenueKit</div>
+    <p>אתרים מקצועיים למועדונים ואירועים</p>
+    <p class="vk-footer-copy">&copy; 2026 VenueKit. כל הזכויות שמורות.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://uiyqswnhrbfctafeihdh.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpeXFzd25ocmJmY3RhZmVpaGRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MTI5OTAsImV4cCI6MjA4ODM4ODk5MH0.w1YYTGyRlt8MVSEYRjv8tqORfP-aYveVry_xxVYaw0w';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Simple password auth (client-side only — not real security, just a gate)
+    const ADMIN_PASSWORD = 'venuekit2026';
+    const SESSION_KEY = 'vk_dash_auth';
+
+    let allLeads = [];
+    let allBookings = [];
+
+    // ── Auth ──
+    function checkAuth() {
+      if (sessionStorage.getItem(SESSION_KEY) === 'true') {
+        unlock();
+        return;
+      }
+    }
+
+    function unlock() {
+      document.getElementById('login-overlay').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('footer').style.display = 'block';
+      document.getElementById('logout-btn').style.display = 'block';
+      sessionStorage.setItem(SESSION_KEY, 'true');
+      loadData();
+    }
+
+    document.getElementById('login-btn').addEventListener('click', attemptLogin);
+    document.getElementById('password-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') attemptLogin();
+    });
+    document.getElementById('logout-btn').addEventListener('click', (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem(SESSION_KEY);
+      location.reload();
+    });
+
+    function attemptLogin() {
+      const pw = document.getElementById('password-input').value;
+      if (pw === ADMIN_PASSWORD) {
+        unlock();
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+        document.getElementById('password-input').value = '';
+        document.getElementById('password-input').focus();
+      }
+    }
+
+    // ── Tabs ──
+    document.querySelectorAll('.vk-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.vk-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        document.getElementById('tab-leads').style.display = target === 'leads' ? 'block' : 'none';
+        document.getElementById('tab-bookings').style.display = target === 'bookings' ? 'block' : 'none';
+      });
+    });
+
+    // ── Data loading ──
+    async function loadData() {
+      await Promise.all([loadLeads(), loadBookings()]);
+    }
+
+    async function loadLeads() {
+      try {
+        const { data, error } = await db.from('vk_leads').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        allLeads = data || [];
+        renderLeads();
+        document.getElementById('stat-leads').textContent = allLeads.length;
+        document.getElementById('stat-new').textContent = allLeads.filter(l => l.status === 'new').length;
+      } catch (err) {
+        console.error('Failed to load leads:', err);
+        document.getElementById('leads-empty').style.display = 'block';
+        document.getElementById('leads-empty').querySelector('p').textContent = 'שגיאה בטעינת לידים. ודאו שהטבלאות נוצרו ב-Supabase.';
+      }
+    }
+
+    async function loadBookings() {
+      try {
+        const { data, error } = await db.from('vk_bookings').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        allBookings = data || [];
+        renderBookings();
+        document.getElementById('stat-bookings').textContent = allBookings.length;
+        document.getElementById('stat-pending').textContent = allBookings.filter(b => b.status === 'pending').length;
+      } catch (err) {
+        console.error('Failed to load bookings:', err);
+        document.getElementById('bookings-empty').style.display = 'block';
+        document.getElementById('bookings-empty').querySelector('p').textContent = 'שגיאה בטעינת הזמנות. ודאו שהטבלאות נוצרו ב-Supabase.';
+      }
+    }
+
+    // ── Rendering ──
+    const STATUS_LABELS = {
+      new: 'חדש', contacted: 'פנו', in_progress: 'בטיפול', closed: 'סגור', lost: 'אבוד',
+      pending: 'ממתין', confirmed: 'אושר', cancelled: 'בוטל'
+    };
+
+    const EVENT_LABELS = {
+      tournament: 'טורניר', league_night: 'ערב ליגה', private_event: 'אירוע פרטי',
+      corporate: 'אירוע חברה', other: 'אחר'
+    };
+
+    function fmtDate(d) {
+      if (!d) return '-';
+      return new Date(d).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: '2-digit' });
+    }
+
+    function renderLeads() {
+      const body = document.getElementById('leads-body');
+      const empty = document.getElementById('leads-empty');
+
+      if (allLeads.length === 0) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      body.innerHTML = allLeads.map(l => `
+        <tr>
+          <td style="font-family:'JetBrains Mono',monospace;color:var(--vk-text-muted)">${l.id}</td>
+          <td><strong>${esc(l.name)}</strong>${l.notes ? '<br><span style="font-size:11px;color:var(--vk-text-muted)">' + esc(l.notes).substring(0, 60) + '</span>' : ''}</td>
+          <td><a href="tel:${esc(l.phone)}" style="color:var(--vk-text)">${esc(l.phone || '-')}</a></td>
+          <td>${esc(l.venue_name || '-')}</td>
+          <td>${l.plan ? '<span class="vk-badge vk-badge-new">' + esc(l.plan) + (l.price ? ' ' + esc(l.price) : '') + '</span>' : '-'}</td>
+          <td>
+            <select class="vk-status-select" onchange="updateLeadStatus(${l.id}, this.value)">
+              ${['new','contacted','in_progress','closed','lost'].map(s => `<option value="${s}" ${l.status === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
+            </select>
+          </td>
+          <td style="white-space:nowrap">${fmtDate(l.created_at)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderBookings() {
+      const body = document.getElementById('bookings-body');
+      const empty = document.getElementById('bookings-empty');
+
+      if (allBookings.length === 0) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      body.innerHTML = allBookings.map(b => `
+        <tr>
+          <td style="font-family:'JetBrains Mono',monospace;color:var(--vk-text-muted)">VK-${String(b.id).padStart(4, '0')}</td>
+          <td>${esc(EVENT_LABELS[b.event_name] || b.event_name)}</td>
+          <td style="white-space:nowrap">${b.event_date ? fmtDate(b.event_date) + ' ' + (b.event_time || '') : '-'}</td>
+          <td><strong>${esc(b.customer_name)}</strong>${b.notes ? '<br><span style="font-size:11px;color:var(--vk-text-muted)">' + esc(b.notes).substring(0, 60) + '</span>' : ''}</td>
+          <td><a href="tel:${esc(b.customer_phone)}" style="color:var(--vk-text)">${esc(b.customer_phone || '-')}</a></td>
+          <td style="text-align:center">${b.guests || 1}</td>
+          <td>
+            <select class="vk-status-select" onchange="updateBookingStatus(${b.id}, this.value)">
+              ${['pending','confirmed','cancelled'].map(s => `<option value="${s}" ${b.status === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
+            </select>
+          </td>
+          <td style="white-space:nowrap">${fmtDate(b.created_at)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // ── Status updates ──
+    async function updateLeadStatus(id, status) {
+      const { error } = await db.from('vk_leads').update({ status }).eq('id', id);
+      if (error) { alert('שגיאה בעדכון סטטוס'); console.error(error); }
+      else {
+        const lead = allLeads.find(l => l.id === id);
+        if (lead) lead.status = status;
+        document.getElementById('stat-new').textContent = allLeads.filter(l => l.status === 'new').length;
+      }
+    }
+
+    async function updateBookingStatus(id, status) {
+      const { error } = await db.from('vk_bookings').update({ status }).eq('id', id);
+      if (error) { alert('שגיאה בעדכון סטטוס'); console.error(error); }
+      else {
+        const booking = allBookings.find(b => b.id === id);
+        if (booking) booking.status = status;
+        document.getElementById('stat-pending').textContent = allBookings.filter(b => b.status === 'pending').length;
+      }
+    }
+
+    // ── CSV Export ──
+    function exportCSV() {
+      const activeTab = document.querySelector('.vk-tab.active').dataset.tab;
+      let csv, filename;
+
+      if (activeTab === 'leads') {
+        csv = 'ID,Name,Phone,Venue,Plan,Price,Status,Notes,Created\n' +
+          allLeads.map(l => [l.id, q(l.name), q(l.phone), q(l.venue_name), q(l.plan), q(l.price), l.status, q(l.notes), l.created_at].join(',')).join('\n');
+        filename = 'venuekit-leads.csv';
+      } else {
+        csv = 'ID,Event,Date,Time,Name,Phone,Email,Guests,Status,Notes,Created\n' +
+          allBookings.map(b => ['VK-' + String(b.id).padStart(4,'0'), q(EVENT_LABELS[b.event_name] || b.event_name), b.event_date, b.event_time, q(b.customer_name), q(b.customer_phone), q(b.customer_email), b.guests, b.status, q(b.notes), b.created_at].join(',')).join('\n');
+        filename = 'venuekit-bookings.csv';
+      }
+
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function q(v) { return v ? '"' + String(v).replace(/"/g, '""') + '"' : ''; }
+    function esc(v) { if (!v) return ''; const d = document.createElement('div'); d.textContent = v; return d.innerHTML; }
+
+    // ── Init ──
+    checkAuth();
+  </script>
+</body>
+</html>
