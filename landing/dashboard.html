@@ -41,6 +41,39 @@
     .vk-badge-pending { background: rgba(234,179,8,.15); color: #eab308; }
     .vk-badge-confirmed { background: rgba(34,197,94,.15); color: #22c55e; }
     .vk-badge-cancelled { background: rgba(239,68,68,.15); color: #ef4444; }
+    .vk-badge-rejected { background: rgba(239,68,68,.15); color: #ef4444; }
+
+    /* Calendar */
+    .vk-calendar { margin-bottom: 24px; }
+    .vk-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .vk-cal-header h3 { font-size: 18px; font-weight: 700; margin: 0; }
+    .vk-cal-nav { display: flex; gap: 8px; }
+    .vk-cal-nav button { background: var(--vk-bg-card); border: 1px solid var(--vk-border); color: var(--vk-text); border-radius: 6px; padding: 6px 14px; font-size: 14px; cursor: pointer; font-family: 'Heebo', sans-serif; font-weight: 600; transition: all .2s; }
+    .vk-cal-nav button:hover { border-color: var(--vk-primary); color: var(--vk-primary); }
+    .vk-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .vk-cal-day-header { text-align: center; font-size: 11px; font-weight: 700; color: var(--vk-text-muted); padding: 8px 4px; text-transform: uppercase; }
+    .vk-cal-cell { background: var(--vk-bg-card); border: 1px solid var(--vk-border); border-radius: 6px; min-height: 60px; padding: 6px; cursor: pointer; transition: all .2s; position: relative; }
+    .vk-cal-cell:hover { border-color: var(--vk-primary); }
+    .vk-cal-cell.today { border-color: var(--vk-primary); box-shadow: 0 0 0 1px var(--vk-primary); }
+    .vk-cal-cell.selected { background: rgba(59,130,246,.1); border-color: var(--vk-primary); }
+    .vk-cal-cell.other-month { opacity: .35; }
+    .vk-cal-cell .day-num { font-size: 13px; font-weight: 600; color: var(--vk-text); }
+    .vk-cal-cell .cal-badge { display: inline-block; margin-top: 4px; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; background: rgba(59,130,246,.2); color: #3b82f6; }
+    .vk-cal-cell .cal-badge.has-pending { background: rgba(234,179,8,.2); color: #eab308; }
+    .vk-cal-cell .cal-badge.all-confirmed { background: rgba(34,197,94,.2); color: #22c55e; }
+    .vk-cal-day-bookings { margin-top: 16px; }
+    .vk-cal-day-bookings h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .vk-cal-booking-card { background: var(--vk-bg-card); border: 1px solid var(--vk-border); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .vk-cal-booking-info { flex: 1; min-width: 200px; }
+    .vk-cal-booking-info strong { font-size: 14px; }
+    .vk-cal-booking-info span { font-size: 12px; color: var(--vk-text-muted); display: block; margin-top: 2px; }
+
+    /* Approve/Reject buttons */
+    .vk-action-btns { display: flex; gap: 6px; align-items: center; }
+    .vk-btn-approve { background: rgba(34,197,94,.15); color: #22c55e; border: 1px solid rgba(34,197,94,.3); border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all .2s; }
+    .vk-btn-approve:hover { background: rgba(34,197,94,.3); }
+    .vk-btn-reject { background: rgba(239,68,68,.15); color: #ef4444; border: 1px solid rgba(239,68,68,.3); border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Heebo', sans-serif; transition: all .2s; }
+    .vk-btn-reject:hover { background: rgba(239,68,68,.3); }
 
     /* Status select */
     .vk-status-select { background: var(--vk-bg-card); border: 1px solid var(--vk-border); color: var(--vk-text); border-radius: 6px; padding: 4px 8px; font-size: 12px; font-family: 'Heebo', sans-serif; cursor: pointer; }
@@ -125,6 +158,7 @@
     <div class="vk-tabs">
       <button class="vk-tab active" data-tab="leads">לידים</button>
       <button class="vk-tab" data-tab="bookings">הזמנות</button>
+      <button class="vk-tab" data-tab="calendar">לוח שנה</button>
     </div>
 
     <!-- Leads table -->
@@ -161,6 +195,7 @@
             <th>טלפון</th>
             <th>משתתפים</th>
             <th>סטטוס</th>
+            <th>פעולות</th>
             <th>נוצר</th>
           </tr>
         </thead>
@@ -170,6 +205,20 @@
         <div class="vk-empty-icon">📅</div>
         <p>אין הזמנות עדיין.<br>כשמישהו ישלח הזמנת אירוע, היא תופיע כאן.</p>
       </div>
+    </div>
+
+    <!-- Calendar view -->
+    <div id="tab-calendar" class="vk-calendar" style="display:none">
+      <div class="vk-cal-header">
+        <h3 id="cal-month-title"></h3>
+        <div class="vk-cal-nav">
+          <button onclick="calNav(-1)">&rarr; הקודם</button>
+          <button onclick="calNav(0)">היום</button>
+          <button onclick="calNav(1)">הבא &larr;</button>
+        </div>
+      </div>
+      <div class="vk-cal-grid" id="cal-grid"></div>
+      <div class="vk-cal-day-bookings" id="cal-day-bookings"></div>
     </div>
   </div>
 
@@ -232,13 +281,16 @@
     }
 
     // ── Tabs ──
+    const TAB_IDS = ['leads', 'bookings', 'calendar'];
     document.querySelectorAll('.vk-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.vk-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         const target = tab.dataset.tab;
-        document.getElementById('tab-leads').style.display = target === 'leads' ? 'block' : 'none';
-        document.getElementById('tab-bookings').style.display = target === 'bookings' ? 'block' : 'none';
+        TAB_IDS.forEach(id => {
+          document.getElementById('tab-' + id).style.display = id === target ? 'block' : 'none';
+        });
+        if (target === 'calendar') renderCalendar();
       });
     });
 
@@ -280,7 +332,7 @@
     // ── Rendering ──
     const STATUS_LABELS = {
       new: 'חדש', contacted: 'פנו', in_progress: 'בטיפול', closed: 'סגור', lost: 'אבוד',
-      pending: 'ממתין', confirmed: 'אושר', cancelled: 'בוטל'
+      pending: 'ממתין', confirmed: 'אושר', rejected: 'נדחה', cancelled: 'בוטל'
     };
 
     const EVENT_LABELS = {
@@ -342,8 +394,18 @@
           <td style="text-align:center">${b.guests || 1}</td>
           <td>
             <select class="vk-status-select" onchange="updateBookingStatus(${b.id}, this.value)">
-              ${['pending','confirmed','cancelled'].map(s => `<option value="${s}" ${b.status === s ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
+              ${['pending','confirmed','rejected','cancelled'].map(s => `<option value="${s}" ${b.status === s ? 'selected' : ''}>${STATUS_LABELS[s] || s}</option>`).join('')}
             </select>
+          </td>
+          <td class="vk-action-btns" style="white-space:nowrap">
+            ${b.status === 'pending' ? `
+              <button class="vk-btn-approve" onclick="approveBooking(${b.id})">&#10003; אשר</button>
+              <button class="vk-btn-reject" onclick="rejectBooking(${b.id})">&#10007; דחה</button>
+            ` : b.status === 'confirmed' ? `
+              <span class="vk-badge vk-badge-confirmed">אושר</span>
+            ` : b.status === 'rejected' ? `
+              <span class="vk-badge vk-badge-rejected">נדחה</span>
+            ` : ''}
           </td>
           <td style="white-space:nowrap">${fmtDate(b.created_at)}</td>
         </tr>
@@ -395,6 +457,161 @@
 
     function q(v) { return v ? '"' + String(v).replace(/"/g, '""') + '"' : ''; }
     function esc(v) { if (!v) return ''; const d = document.createElement('div'); d.textContent = v; return d.innerHTML; }
+
+    // ── Approve / Reject ──
+    async function approveBooking(id) {
+      const booking = allBookings.find(b => b.id === id);
+      if (!booking) return;
+      const { error } = await db.from('vk_bookings').update({ status: 'confirmed' }).eq('id', id);
+      if (error) { alert('שגיאה באישור ההזמנה'); console.error(error); return; }
+      booking.status = 'confirmed';
+      renderBookings();
+      document.getElementById('stat-pending').textContent = allBookings.filter(b => b.status === 'pending').length;
+      // WhatsApp confirmation
+      const name = booking.customer_name || '';
+      const date = booking.event_date ? fmtDate(booking.event_date) : '';
+      const phone = (booking.customer_phone || '').replace(/[^0-9]/g, '');
+      if (phone) {
+        const msg = encodeURIComponent(`שלום ${name}! האירוע שלך ב-${date} אושר. מחכים לכם! 🎉`);
+        window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+      }
+    }
+
+    async function rejectBooking(id) {
+      const booking = allBookings.find(b => b.id === id);
+      if (!booking) return;
+      if (!confirm('בטוח שברצונך לדחות הזמנה זו?')) return;
+      const { error } = await db.from('vk_bookings').update({ status: 'rejected' }).eq('id', id);
+      if (error) { alert('שגיאה בדחיית ההזמנה'); console.error(error); return; }
+      booking.status = 'rejected';
+      renderBookings();
+      document.getElementById('stat-pending').textContent = allBookings.filter(b => b.status === 'pending').length;
+    }
+
+    // ── Calendar ──
+    const HEB_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+    const HEB_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+    let calYear, calMonth, calSelectedDate = null;
+
+    function initCalendar() {
+      const now = new Date();
+      calYear = now.getFullYear();
+      calMonth = now.getMonth();
+    }
+    initCalendar();
+
+    function calNav(dir) {
+      if (dir === 0) { initCalendar(); }
+      else { calMonth += dir; if (calMonth > 11) { calMonth = 0; calYear++; } if (calMonth < 0) { calMonth = 11; calYear--; } }
+      calSelectedDate = null;
+      renderCalendar();
+    }
+
+    function getBookingsForDate(dateStr) {
+      return allBookings.filter(b => b.event_date === dateStr);
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('cal-grid');
+      const title = document.getElementById('cal-month-title');
+      title.textContent = HEB_MONTHS[calMonth] + ' ' + calYear;
+
+      const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+
+      let html = '';
+      // Day headers
+      HEB_DAYS.forEach(d => { html += `<div class="vk-cal-day-header">${d}</div>`; });
+
+      // Previous month trailing days
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const day = daysInPrev - i;
+        const m = calMonth === 0 ? 11 : calMonth - 1;
+        const y = calMonth === 0 ? calYear - 1 : calYear;
+        const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const bookings = getBookingsForDate(ds);
+        html += calCellHTML(day, ds, bookings, true, todayStr);
+      }
+
+      // Current month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const ds = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const bookings = getBookingsForDate(ds);
+        html += calCellHTML(day, ds, bookings, false, todayStr);
+      }
+
+      // Next month leading days
+      const totalCells = firstDay + daysInMonth;
+      const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+      for (let day = 1; day <= remaining; day++) {
+        const m = calMonth === 11 ? 0 : calMonth + 1;
+        const y = calMonth === 11 ? calYear + 1 : calYear;
+        const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const bookings = getBookingsForDate(ds);
+        html += calCellHTML(day, ds, bookings, true, todayStr);
+      }
+
+      grid.innerHTML = html;
+
+      // Show selected day bookings
+      if (calSelectedDate) showDayBookings(calSelectedDate);
+      else document.getElementById('cal-day-bookings').innerHTML = '';
+    }
+
+    function calCellHTML(day, dateStr, bookings, otherMonth, todayStr) {
+      const isToday = dateStr === todayStr;
+      const isSelected = dateStr === calSelectedDate;
+      let cls = 'vk-cal-cell';
+      if (otherMonth) cls += ' other-month';
+      if (isToday) cls += ' today';
+      if (isSelected) cls += ' selected';
+
+      let badge = '';
+      if (bookings.length > 0) {
+        const allConfirmed = bookings.every(b => b.status === 'confirmed');
+        const hasPending = bookings.some(b => b.status === 'pending');
+        const badgeCls = allConfirmed ? 'all-confirmed' : hasPending ? 'has-pending' : '';
+        badge = `<div class="cal-badge ${badgeCls}">${bookings.length}</div>`;
+      }
+
+      return `<div class="${cls}" onclick="selectCalDay('${dateStr}')"><div class="day-num">${day}</div>${badge}</div>`;
+    }
+
+    function selectCalDay(dateStr) {
+      calSelectedDate = dateStr;
+      renderCalendar();
+    }
+
+    function showDayBookings(dateStr) {
+      const container = document.getElementById('cal-day-bookings');
+      const bookings = getBookingsForDate(dateStr);
+      const d = new Date(dateStr + 'T00:00:00');
+      const dayLabel = d.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+      if (bookings.length === 0) {
+        container.innerHTML = `<h4>${dayLabel}</h4><p style="color:var(--vk-text-muted);font-size:13px">אין הזמנות ביום זה.</p>`;
+        return;
+      }
+
+      container.innerHTML = `<h4>${dayLabel} — ${bookings.length} הזמנות</h4>` +
+        bookings.map(b => `
+          <div class="vk-cal-booking-card">
+            <div class="vk-cal-booking-info">
+              <strong>${esc(b.customer_name)}</strong> — ${esc(EVENT_LABELS[b.event_name] || b.event_name)}
+              <span>${b.event_time || ''} | ${b.guests || 1} משתתפים | <span class="vk-badge vk-badge-${b.status}">${STATUS_LABELS[b.status] || b.status}</span></span>
+            </div>
+            <div class="vk-action-btns">
+              ${b.status === 'pending' ? `
+                <button class="vk-btn-approve" onclick="approveBooking(${b.id})">&#10003; אשר</button>
+                <button class="vk-btn-reject" onclick="rejectBooking(${b.id})">&#10007; דחה</button>
+              ` : ''}
+            </div>
+          </div>
+        `).join('');
+    }
 
     // ── Init ──
     checkAuth();
